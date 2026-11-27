@@ -51,11 +51,51 @@ export async function runInit(options) {
   const templatesDir = resolve(srcDir, "../../../templates/base");
   const markflowDest = join(target, "markflow");
   await mkdir(markflowDest, { recursive: true });
+  async function exists(path) {
+    try {
+      await stat(path);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  const archPath = join(markflowDest, "docs/ARCHITECTURE.md");
+  const stackPath = join(markflowDest, "docs/STACK.md");
+  const archExisted = await exists(archPath);
+  const stackExisted = await exists(stackPath);
   const created = await copyDir(
     join(templatesDir, "markflow"),
     markflowDest,
     context.projectName
   );
+  if (context.stacks.length > 0) {
+    const names = context.stacks.map((s) => s.name).join(", ");
+    const evidence = context.stacks
+      .map((s) => s.evidence + " (" + s.confidence + ")")
+      .join(", ");
+    if (!archExisted) {
+      const arch = await readFile(archPath, "utf8");
+      const filled = arch
+        .replace("- Language. TBD", "- Language. " + names)
+        .replace(
+          "- Framework. TBD",
+          "- Framework. TBD\n- Evidence. " +
+            evidence +
+            "\n- Monorepo. " +
+            (context.monorepo ? "Yes" : "No")
+        );
+      await writeFile(archPath, filled);
+    }
+    if (!stackExisted) {
+      const stack = await readFile(stackPath, "utf8");
+      const lines = context.stacks.map(
+        (s) => "- " + s.name + " from " + s.evidence + ", confidence " + s.confidence
+      );
+      const filled =
+        stack + "\n## Detected stacks\n\nDiscovery found these stacks.\n\n" + lines.join("\n") + "\n";
+      await writeFile(stackPath, filled);
+    }
+  }
   const agentsSrc = join(templatesDir, "AGENTS.md");
   const agentsDest = join(target, "AGENTS.md");
   let agentsText = "";
@@ -96,6 +136,12 @@ export async function runInit(options) {
       files: {},
     };
   }
+  marker.discovery = {
+    mode: context.mode,
+    stacks: context.stacks,
+    manifests: context.manifests,
+    monorepo: context.monorepo,
+  };
   async function collectHashes(dir) {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
