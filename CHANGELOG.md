@@ -4,6 +4,23 @@ All notable changes to Markflow will be noted here. The format is simple. Newest
 
 ## Unreleased
 
+## 0.2.0 - 2026-11-27
+
+- Fix update overwriting files the user wrote before init
+- Fix update reverting filled ARCHITECTURE.md and STACK.md to the blank template
+- Fix doctor and doc drift, including the cursor file check
+- Skip build and venv dirs in discovery
+- Fail loudly when the ARCHITECTURE.md template fill cannot run
+- Fill glossary definitions
+- Require sources for doc claims
+- Add doctor quality checks for empty acceptance, Approved specs with TBD, and a PRD still the template
+- Add onboarding workflow and prompt
+- Print the next step after init
+- Hide template instructions in HTML comments and warn when they are left visible
+- Add minimal init mode
+- Add a bad and good doc example
+- Grow the CLI test suite to 48 tests
+
 ## 0.1.0 - 2026-11-27
 
 - Add README, LICENSE, and CONTRIBUTING docs
