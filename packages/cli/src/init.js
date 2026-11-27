@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { discover } from "./discover.js";
 import { hashText } from "./hash.js";
 import { AGENTS } from "./agents.js";
+import { METHODOLOGY_VERSION, TEMPLATE_VERSION } from "./versions.js";
 
 async function copyDir(src, dest, projectName) {
   let created = 0;
@@ -93,6 +94,7 @@ export async function runInit(options) {
   }
   const agentsSrc = join(templatesDir, "AGENTS.md");
   const agentsDest = join(target, "AGENTS.md");
+  const rootFiles = {};
   let agentsText = "";
   try {
     await stat(agentsDest);
@@ -102,6 +104,7 @@ export async function runInit(options) {
     const text = await readFile(agentsSrc, "utf8");
     agentsText = text.split("{{project_name}}").join(context.projectName);
     await writeFile(agentsDest, agentsText);
+    rootFiles["AGENTS.md"] = hashText(agentsText);
     console.log("Created AGENTS.md.");
   }
   for (const file of AGENTS[agent]) {
@@ -118,6 +121,7 @@ export async function runInit(options) {
       : agentsText;
     await mkdir(dirname(agentDest), { recursive: true });
     await writeFile(agentDest, content);
+    rootFiles[file.path] = hashText(content);
     console.log("Created " + file.path + ".");
   }
   const pkg = JSON.parse(
@@ -130,12 +134,23 @@ export async function runInit(options) {
   } catch {
     marker = {
       cli: pkg.version,
-      methodology: pkg.version,
-      template: pkg.version,
+      methodology: METHODOLOGY_VERSION,
+      template: TEMPLATE_VERSION,
       project: context.projectName,
+      agent,
       files: {},
+      rootFiles: {},
     };
   }
+  if (!marker.rootFiles) {
+    marker.rootFiles = {};
+  }
+  for (const [path, hash] of Object.entries(rootFiles)) {
+    if (!(path in marker.rootFiles)) {
+      marker.rootFiles[path] = hash;
+    }
+  }
+  marker.agent = marker.agent || agent;
   marker.discovery = {
     mode: context.mode,
     stacks: context.stacks,

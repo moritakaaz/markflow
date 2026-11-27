@@ -1,9 +1,12 @@
 // Update restores missing files and updates unmodified files.
 // It never overwrites a file the user changed.
+// Use preview mode to see what would change without changing files.
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { hashText } from "./hash.js";
+import { AGENTS } from "./agents.js";
+import { METHODOLOGY_VERSION, TEMPLATE_VERSION } from "./versions.js";
 
 async function listFiles(dir, base, out) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -17,7 +20,8 @@ async function listFiles(dir, base, out) {
   }
 }
 
-export async function runUpdate() {
+export async function runUpdate(options) {
+  const preview = options && options.preview;
   const target = process.cwd();
   const markerPath = join(target, "markflow/.markflow.json");
   let marker;
@@ -31,63 +35,97 @@ export async function runUpdate() {
   const templatesDir = resolve(srcDir, "../../../templates/base");
   const pkg = JSON.parse(await readFile(join(srcDir, "../package.json"), "utf8"));
   const projectName = marker.project || target.split("/").pop();
+  const agent = marker.agent && marker.agent in AGENTS ? marker.agent : "generic";
   const stored = marker.files || {};
+  const storedRoot = marker.rootFiles || {};
   const rels = [];
   await listFiles(join(templatesDir, "markflow"), join(templatesDir, "markflow"), rels);
+  const templateSet = new Set(rels);
   let updated = 0;
   let restored = 0;
   let skipped = 0;
+  let kept = 0;
   const files = { ...stored };
-  for (const rel of rels) {
-    const templateText = (await readFile(join(templatesDir, "markflow", rel), "utf8"))
-      .split("{{project_name}}")
-      .join(projectName);
+  const rootFiles = { ...storedRoot };
+  async function sync(rel, dest, templateText, storedMap, newMap) {
     const templateHash = hashText(templateText);
-    const dest = join(target, "markflow", rel);
     let current = null;
     try {
       current = await readFile(dest, "utf8");
     } catch {
-      await mkdir(dirname(dest), { recursive: true });
-      await writeFile(dest, templateText);
-      console.log("Restored " + rel);
-      files[rel] = templateHash;
-      restored += 1;
-      continue;
-    }
-    if (stored[rel] && hashText(current) === stored[rel]) {
-      if (templateHash !== stored[rel]) {
+      console.log((preview ? "Would restore " : "Restored ") + rel);
+      if (!preview) {
+        await mkdir(dirname(dest), { recursive: true });
         await writeFile(dest, templateText);
-        console.log("Updated " + rel);
-        files[rel] = templateHash;
-        updated += 1;
       }
-      continue;
+      restored += 1;
+      newMap[rel] = templateHash;
+      return;
+    }
+    if (storedMap[rel] && hashText(current) === storedMap[rel]) {
+      if (templateHash !== storedMap[rel]) {
+        console.log((preview ? "Would update " : "Updated ") + rel);
+        if (!preview) {
+          await writeFile(dest, templateText);
+        }
+        updated += 1;
+        newMap[rel] = templateHash;
+      }
+      return;
     }
     console.log("Skipped " + rel + ", modified.");
     skipped += 1;
   }
-  const agentsDest = join(target, "AGENTS.md");
-  try {
-    await stat(agentsDest);
-  } catch {
-    const text = (await readFile(join(templatesDir, "AGENTS.md"), "utf8"))
+  for (const rel of rels) {
+    const templateText = (await readFile(join(templatesDir, "markflow", rel), "utf8"))
       .split("{{project_name}}")
       .join(projectName);
-    await writeFile(agentsDest, text);
-    console.log("Restored AGENTS.md");
-    restored += 1;
+    await sync(rel, join(target, "markflow", rel), templateText, stored, files);
+  }
+  for (const rel of Object.keys(stored)) {
+    if (!templateSet.has(rel)) {
+      console.log("Kept " + rel + ", no longer in template.");
+      kept += 1;
+    }
+  }
+  const agentsTemplate = (await readFile(join(templatesDir, "AGENTS.md"), "utf8"))
+    .split("{{project_name}}")
+    .join(projectName);
+  await sync("AGENTS.md", join(target, "AGENTS.md"), agentsTemplate, storedRoot, rootFiles);
+  let agentsText = agentsTemplate;
+  try {
+    agentsText = await readFile(join(target, "AGENTS.md"), "utf8");
+  } catch {
+    // AGENTS.md is missing, so the template text stays in use.
+  }
+  for (const file of AGENTS[agent]) {
+    if (!(file.path in storedRoot)) {
+      continue;
+    }
+    const content = file.frontmatter
+      ? file.frontmatter + "\n" + agentsText
+      : agentsText;
+    await sync(file.path, join(target, file.path), content, storedRoot, rootFiles);
+  }
+  if (preview) {
+    console.log("Preview only, no files changed.");
+    console.log(
+      "Would update " + updated + " files. Would restore " + restored + " files. Skipped " + skipped + " files. Kept " + kept + " files."
+    );
+    return { ok: true, updated, restored, skipped, kept, preview: true };
   }
   marker.cli = pkg.version;
-  marker.methodology = pkg.version;
-  marker.template = pkg.version;
+  marker.methodology = METHODOLOGY_VERSION;
+  marker.template = TEMPLATE_VERSION;
   marker.project = projectName;
+  marker.agent = agent;
   marker.files = files;
+  marker.rootFiles = rootFiles;
   await writeFile(markerPath, JSON.stringify(marker, null, 2) + "\n");
-  if (updated === 0 && restored === 0 && skipped === 0) {
+  if (updated === 0 && restored === 0 && skipped === 0 && kept === 0) {
     console.log("Already up to date.");
   } else {
-    console.log("Updated " + updated + " files. Restored " + restored + " files. Skipped " + skipped + " files.");
+    console.log("Updated " + updated + " files. Restored " + restored + " files. Skipped " + skipped + " files. Kept " + kept + " files.");
   }
-  return { ok: true, updated, restored, skipped };
+  return { ok: true, updated, restored, skipped, kept };
 }

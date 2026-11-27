@@ -11,7 +11,7 @@ const HELP = [
   "Usage",
   "  markflow init [--agent generic|claude|codex|cursor|copilot]",
   "  markflow doctor",
-  "  markflow update",
+  "  markflow update [--preview]",
   "  markflow --help",
   "  markflow --version",
 ].join("\n");
@@ -46,7 +46,7 @@ if (args.length === 0) {
   const result = await runDoctor();
   process.exitCode = result.ok ? 0 : 1;
 } else if (args[0] === "update") {
-  const result = await runUpdate();
+  const result = await runUpdate({ preview: args.includes("--preview") });
   process.exitCode = result.ok ? 0 : 1;
 } else if (args[0] === "init") {
   const result = await runInit({ agent: parseAgent(args.slice(1)) });

@@ -9,7 +9,7 @@ Run one of these commands. A command you do not know is rejected and creates no 
 - `markflow init` creates the docs layer in the current repo.
 - `markflow init --agent claude` also creates CLAUDE.md. Use `--agent codex` for Codex, which reads AGENTS.md. Use `--agent cursor` for .cursor/rules/markflow.mdc. Use `--agent copilot` for .github/copilot-instructions.md.
 - `markflow doctor` checks the docs layer for missing files, leftover placeholders, broken internal links, and specs missing from the index. It reports errors, warnings, and info. Only errors make it exit with 1.
-- `markflow update` restores missing files and updates files the user did not change.
+- `markflow update` restores missing files and updates files the user did not change. It also protects AGENTS.md and agent files with the same hash check. Use `markflow update --preview` to see what would change without changing any file. The CLI, methodology, and template each have their own version. See src/versions.js for the methodology and template versions.
 - `markflow --help` shows the commands.
 - `markflow --version` shows the CLI version.
 
