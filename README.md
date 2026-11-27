@@ -55,7 +55,7 @@ Read `docs/PRINCIPLES.md` for the full list.
 
 ## Repo layout
 
-- `docs` holds the methodology. Start with `PRINCIPLES.md`, then `PROJECT_DISCOVERY.md` and `ADAPTATION.md`.
+- `docs` holds the methodology. Start with `PRINCIPLES.md`, then `PROJECT_DISCOVERY.md` and `ADAPTATION.md`. Read `docs/EXAMPLE.md` for a bad doc next to a good doc.
 - `README.md` is this file. It stays short.
 - `CONTRIBUTING.md` explains how to help.
 - `CHANGELOG.md` tracks notable changes.
