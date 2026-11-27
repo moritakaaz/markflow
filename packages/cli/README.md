@@ -8,4 +8,6 @@ Use --agent to pick the agent file. The default is generic and creates AGENTS.md
 
 Init also writes markflow/.markflow.json. That file holds the cli, methodology, and template versions used at init time.
 
+Doctor checks a repo for missing Markflow files. Run it with doctor. It reports missing files and placeholders that were not replaced. It exits with 1 when it finds issues.
+
 See docs/PROJECT_DISCOVERY.md for how discovery works.
