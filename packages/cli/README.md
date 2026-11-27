@@ -2,6 +2,10 @@
 
 This folder holds the Markflow command line tool. Read it when you work on the init command.
 
+## Tests
+
+Run tests with npm test from this folder. Tests use temp dirs only. They never touch a real repo. They cover discovery, init, doctor, update, the command parser, and agent adapters.
+
 ## Usage
 
 Run one of these commands. A command you do not know is rejected and creates no files.

@@ -41,7 +41,7 @@ export async function runInit(options) {
     console.log("Unknown agent.");
     return { agent, copied: 0, ok: false };
   }
-  const target = process.cwd();
+  const target = options.target || process.cwd();
   const context = await discover(target);
   const srcDir = dirname(fileURLToPath(import.meta.url));
   const templatesDir = resolve(srcDir, "../../../templates/base");

@@ -22,7 +22,7 @@ async function listFiles(dir, base, out) {
 
 export async function runUpdate(options) {
   const preview = options && options.preview;
-  const target = process.cwd();
+  const target = (options && options.target) || process.cwd();
   const markerPath = join(target, "markflow/.markflow.json");
   let marker;
   try {

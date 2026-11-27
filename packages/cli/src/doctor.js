@@ -49,8 +49,8 @@ function findLinks(text) {
   return links;
 }
 
-export async function runDoctor() {
-  const root = process.cwd();
+export async function runDoctor(options) {
+  const root = (options && options.target) || process.cwd();
   const errors = [];
   const warnings = [];
   for (const file of REQUIRED) {
