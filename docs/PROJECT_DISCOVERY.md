@@ -20,6 +20,8 @@ Discovery looks for files that already exist in the repo. These files tell Markf
 
 It also reads configs that are already there. Examples are framework configs, test configs, and CI configs. It reads them to learn, not to change them.
 
+Discovery scans nested members too. A manifest three levels deep inside apps or packages still counts. It also reads workspace evidence such as a workspaces field or a workspace file at the root. A repo counts as a monorepo when workspace evidence exists or when manifests live in more than one member area.
+
 ## What discovery does not do
 
 Discovery does not guess architecture from folder names alone. A folder named `services` does not prove a service layer exists. A folder named `api` does not prove a REST API exists.
