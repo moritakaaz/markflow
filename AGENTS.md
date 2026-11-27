@@ -10,7 +10,7 @@ Markflow is a universal documentation-driven development system. It is for human
 
 Read `README.md` first. Then read `docs/PRINCIPLES.md`.
 
-Do not start coding the CLI until the methodology docs are clear. Do not invent commands that are not in the docs.
+Do not invent commands that are not in the docs.
 
 ## House rules
 

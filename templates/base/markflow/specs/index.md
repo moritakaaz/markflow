@@ -11,4 +11,5 @@ Draft means the spec is still being written. Approved means it is ready to build
 ## Specs
 
 | ID | Title | Status |
+|---|---|---|
 | 01 | TBD | Draft |

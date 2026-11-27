@@ -2,7 +2,9 @@
 // It reports errors, warnings, and info.
 // Errors fail the check. Warnings and info do not.
 import { readdir, readFile, stat } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
+import { findTemplatesDir } from "./templates.js";
+import { MINIMAL_REQUIRED } from "./minimal.js";
 
 const REQUIRED = [
   "AGENTS.md",
@@ -18,7 +20,7 @@ const REQUIRED = [
   "markflow/.markflow.json",
 ];
 
-const AGENT_FILES = ["CLAUDE.md", ".cursorrules"];
+const AGENT_FILES = ["CLAUDE.md", ".cursor/rules/markflow.mdc"];
 
 async function walk(dir, out) {
   let entries;
@@ -39,6 +41,73 @@ async function walk(dir, out) {
   }
 }
 
+// First sentence of each fill-in instruction in the templates.
+// The full lines live inside HTML comments in the templates.
+// A doc that still shows one of these as visible text was not filled in.
+const INSTRUCTIONS = [
+  "Write one short paragraph.",
+  "List the main users.",
+  "List the core features.",
+  "List what this project will not do.",
+  "Write how you will know this project works.",
+  "Write what discovery found.",
+  "Write where code lives.",
+  "Write how a request or a job moves through the system.",
+  "Add one row per library.",
+  "Add one entry per term.",
+  "Write what you test at each level.",
+  "Write the exact command to run tests.",
+  "List the edge cases that often break.",
+  "Write your naming pattern here.",
+  "Write your function format here.",
+  "Write the order of parts in a file here.",
+  "List the main entities.",
+  "Write how entities link to each other.",
+  "Write the rules for data.",
+  "Write how schema changes are made and tested.",
+  "Write how auth works.",
+  "List each endpoint with method, path, request, and response.",
+  "Write the shared rules.",
+  "Write the steps from main branch to production.",
+  "List the env vars that are required.",
+  "Write how to roll back a bad release.",
+  "Add one entry per server.",
+  "Write how the master config in `.agents/mcp.json` is copied to your AI tool.",
+  "Write what this feature must do in one or two sentences.",
+  "Write who uses this feature.",
+  "List what must be true when this feature is done.",
+  "List what this feature will not do.",
+  "Write how you will test this feature.",
+  "Write the decision in one sentence.",
+  "Write why this decision was needed.",
+  "List the options you considered.",
+  "Write what you picked and why.",
+  "Write Draft or Approved.",
+  "Write the picked stack and the main reason.",
+];
+
+// Remove HTML comments, so hidden instructions do not count as visible text.
+function stripComments(text) {
+  return text.replace(/<!--[\s\S]*?-->/g, "");
+}
+
+// Lines of one ## section, or null when the section is missing.
+function sectionLines(text, heading) {
+  const lines = text.split("\n");
+  const start = lines.findIndex((line) => line.trim() === "## " + heading);
+  if (start === -1) {
+    return null;
+  }
+  const out = [];
+  for (let i = start + 1; i < lines.length; i += 1) {
+    if (lines[i].startsWith("## ")) {
+      break;
+    }
+    out.push(lines[i]);
+  }
+  return out;
+}
+
 function findLinks(text) {
   const links = [];
   const re = /\[[^\]]*\]\(([^)\s]+)\)/g;
@@ -53,15 +122,6 @@ export async function runDoctor(options) {
   const root = (options && options.target) || process.cwd();
   const errors = [];
   const warnings = [];
-  for (const file of REQUIRED) {
-    try {
-      await stat(join(root, file));
-      console.log("OK " + file);
-    } catch {
-      console.log("Error Missing " + file);
-      errors.push(file);
-    }
-  }
   let marker = null;
   try {
     marker = JSON.parse(
@@ -72,7 +132,18 @@ export async function runDoctor(options) {
       errors.push("markflow/.markflow.json");
     }
   } catch {
-    // Missing marker is already reported above.
+    // Missing marker is already reported below.
+  }
+  const required =
+    marker && marker.minimal === true ? MINIMAL_REQUIRED : REQUIRED;
+  for (const file of required) {
+    try {
+      await stat(join(root, file));
+      console.log("OK " + file);
+    } catch {
+      console.log("Error Missing " + file);
+      errors.push(file);
+    }
   }
   if (marker && marker.files) {
     for (const rel of Object.keys(marker.files)) {
@@ -103,6 +174,14 @@ export async function runDoctor(options) {
       console.log("Error Placeholder left in " + rel);
       errors.push(rel);
     }
+    const visible = stripComments(text);
+    for (const phrase of INSTRUCTIONS) {
+      if (visible.includes(phrase)) {
+        console.log("Warning Instruction text left in " + rel);
+        warnings.push(rel);
+        break;
+      }
+    }
     tbd += text.split("TBD").length - 1;
     for (const link of findLinks(text)) {
       if (
@@ -125,6 +204,26 @@ export async function runDoctor(options) {
       }
     }
   }
+  try {
+    const templatesDir = await findTemplatesDir();
+    const projectName =
+      (marker && marker.project) || basename(root);
+    const prdTemplate = (
+      await readFile(join(templatesDir, "markflow/docs/PRD.md"), "utf8")
+    )
+      .split("{{project_name}}")
+      .join(projectName);
+    const prdText = await readFile(
+      join(root, "markflow/docs/PRD.md"),
+      "utf8"
+    );
+    if (prdText === prdTemplate) {
+      console.log("Warning PRD is still the template markflow/docs/PRD.md");
+      warnings.push("markflow/docs/PRD.md");
+    }
+  } catch {
+    // Template or PRD is missing, so skip this check.
+  }
   let specTotal = 0;
   let specDraft = 0;
   try {
@@ -141,12 +240,31 @@ export async function runDoctor(options) {
       }
       specTotal += 1;
       const text = await readFile(file, "utf8");
+      const rel = file.slice(root.length + 1);
       if (text.includes("Status") && text.includes("Draft")) {
         specDraft += 1;
       }
       if (!indexText.includes(name)) {
-        const rel = file.slice(root.length + 1);
         console.log("Warning Spec not listed in index " + rel);
+        warnings.push(rel);
+      }
+      const acceptance = sectionLines(text, "Acceptance");
+      if (acceptance !== null) {
+        const cases = stripComments(acceptance.join("\n"))
+          .split("\n")
+          .filter((line) => line.trim() !== "");
+        if (cases.length === 0) {
+          console.log("Warning Empty acceptance in " + rel);
+          warnings.push(rel);
+        }
+      }
+      const status = sectionLines(text, "Status");
+      if (
+        status !== null &&
+        status.some((line) => line.trim() === "Approved") &&
+        text.includes("TBD")
+      ) {
+        console.log("Warning Approved spec still has TBD in " + rel);
         warnings.push(rel);
       }
     }

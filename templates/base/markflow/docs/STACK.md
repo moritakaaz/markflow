@@ -6,9 +6,10 @@ Do not read when. You only fix a bug in existing code. That does not change the 
 
 ## Libraries
 
-Add one row per library. Keep the reason short.
+<!-- Add one row per library. Keep the reason short. -->
 
 | Need | Library | MCP server | Reason |
+|---|---|---|---|
 | Auth | TBD | TBD | TBD |
 | Database | TBD | TBD | TBD |
 | UI | TBD | TBD | TBD |
