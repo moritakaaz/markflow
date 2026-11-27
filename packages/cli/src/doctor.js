@@ -1,7 +1,8 @@
 // Doctor checks a repo for missing Markflow files.
-// It reports issues and returns ok false when any are found.
+// It reports errors, warnings, and info.
+// Errors fail the check. Warnings and info do not.
 import { readdir, readFile, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 const REQUIRED = [
   "AGENTS.md",
@@ -17,8 +18,15 @@ const REQUIRED = [
   "markflow/.markflow.json",
 ];
 
+const AGENT_FILES = ["CLAUDE.md", ".cursorrules"];
+
 async function walk(dir, out) {
-  const entries = await readdir(dir, { withFileTypes: true });
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
   for (const entry of entries) {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
@@ -31,47 +39,128 @@ async function walk(dir, out) {
   }
 }
 
+function findLinks(text) {
+  const links = [];
+  const re = /\[[^\]]*\]\(([^)\s]+)\)/g;
+  let match;
+  while ((match = re.exec(text)) !== null) {
+    links.push(match[1]);
+  }
+  return links;
+}
+
 export async function runDoctor() {
   const root = process.cwd();
-  const issues = [];
+  const errors = [];
+  const warnings = [];
   for (const file of REQUIRED) {
     try {
       await stat(join(root, file));
       console.log("OK " + file);
     } catch {
-      console.log("Missing " + file);
-      issues.push(file);
+      console.log("Error Missing " + file);
+      errors.push(file);
     }
   }
+  let marker = null;
   try {
-    const marker = JSON.parse(
+    marker = JSON.parse(
       await readFile(join(root, "markflow/.markflow.json"), "utf8")
     );
     if (!marker.cli || !marker.template || !marker.methodology) {
-      console.log("Missing version in .markflow.json");
-      issues.push("markflow/.markflow.json");
+      console.log("Error Missing version in .markflow.json");
+      errors.push("markflow/.markflow.json");
     }
   } catch {
     // Missing marker is already reported above.
   }
+  if (marker && marker.files) {
+    for (const rel of Object.keys(marker.files)) {
+      try {
+        await stat(join(root, "markflow", rel));
+      } catch {
+        console.log("Warning Tracked file missing " + rel);
+        warnings.push(rel);
+      }
+    }
+  }
+  const mdFiles = [];
+  await walk(join(root, "markflow"), mdFiles);
+  mdFiles.push(join(root, "AGENTS.md"));
+  for (const file of AGENT_FILES) {
+    mdFiles.push(join(root, file));
+  }
+  let tbd = 0;
+  for (const file of mdFiles) {
+    let text;
+    try {
+      text = await readFile(file, "utf8");
+    } catch {
+      continue;
+    }
+    const rel = file.slice(root.length + 1);
+    if (text.includes("{{project_name}}")) {
+      console.log("Error Placeholder left in " + rel);
+      errors.push(rel);
+    }
+    tbd += text.split("TBD").length - 1;
+    for (const link of findLinks(text)) {
+      if (
+        link.startsWith("http") ||
+        link.startsWith("#") ||
+        link.startsWith("mailto:")
+      ) {
+        continue;
+      }
+      const target = link.split("#")[0];
+      if (!target) {
+        continue;
+      }
+      const dest = resolve(dirname(file), target);
+      try {
+        await stat(dest);
+      } catch {
+        console.log("Error Broken link in " + rel + " to " + target);
+        errors.push(rel);
+      }
+    }
+  }
+  let specTotal = 0;
+  let specDraft = 0;
   try {
-    const files = [];
-    await walk(join(root, "markflow"), files);
-    for (const file of files) {
+    const specFiles = [];
+    await walk(join(root, "markflow/specs"), specFiles);
+    const indexText = await readFile(
+      join(root, "markflow/specs/index.md"),
+      "utf8"
+    );
+    for (const file of specFiles) {
+      const name = file.split("/").pop();
+      if (name === "index.md" || name === "_template.md") {
+        continue;
+      }
+      specTotal += 1;
       const text = await readFile(file, "utf8");
-      if (text.includes("{{project_name}}")) {
+      if (text.includes("Status") && text.includes("Draft")) {
+        specDraft += 1;
+      }
+      if (!indexText.includes(name)) {
         const rel = file.slice(root.length + 1);
-        console.log("Placeholder left in " + rel);
-        issues.push(rel);
+        console.log("Warning Spec not listed in index " + rel);
+        warnings.push(rel);
       }
     }
   } catch {
-    // Missing markflow folder is already reported above.
+    // Missing specs folder is already reported above.
   }
-  if (issues.length === 0) {
+  console.log("Info " + tbd + " TBD left in docs.");
+  console.log("Info " + specTotal + " specs, " + specDraft + " draft.");
+  if (errors.length === 0 && warnings.length === 0) {
     console.log("Doctor found no issues.");
   } else {
-    console.log("Doctor found " + issues.length + " issues.");
+    console.log(
+      "Doctor found " + errors.length + " errors, " + warnings.length + " warnings."
+    );
   }
-  return { ok: issues.length === 0, issues };
+  return { ok: errors.length === 0, errors, warnings, issues: errors };
 }

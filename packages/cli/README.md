@@ -8,7 +8,7 @@ Run one of these commands. A command you do not know is rejected and creates no 
 
 - `markflow init` creates the docs layer in the current repo.
 - `markflow init --agent claude` also creates CLAUDE.md. Use `--agent cursor` for .cursorrules.
-- `markflow doctor` checks the docs layer for missing files and leftover placeholders.
+- `markflow doctor` checks the docs layer for missing files, leftover placeholders, broken internal links, and specs missing from the index. It reports errors, warnings, and info. Only errors make it exit with 1.
 - `markflow update` restores missing files and updates files the user did not change.
 - `markflow --help` shows the commands.
 - `markflow --version` shows the CLI version.
