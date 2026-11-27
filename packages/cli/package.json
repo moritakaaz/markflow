@@ -1,15 +1,21 @@
 {
   "bin": {
-    "create-markflow": "./src/index.js",
     "markflow": "./src/index.js"
   },
   "description": "Create a Markflow docs layer in a repo.",
   "engines": {
     "node": ">=18"
   },
+  "files": [
+    "src",
+    "test",
+    "templates",
+    "README.md"
+  ],
   "license": "MIT",
-  "name": "create-markflow",
+  "name": "@moritakaaz/markflow",
   "scripts": {
+    "prepack": "rm -rf templates && cp -r ../../templates/base templates",
     "test": "node --test"
   },
   "type": "module",

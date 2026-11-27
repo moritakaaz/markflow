@@ -31,6 +31,14 @@ Then you write specs in Markdown. An AI agent reads the spec, checks the coding 
 
 If a check fails, you go back to the Markdown first. You fix the spec or the code, then you test again. That loop is the core of Markflow.
 
+## Install
+
+Run this in your repo. It needs Node 18 or newer. It does not install app dependencies.
+
+```sh
+npx @moritakaaz/markflow init
+```
+
 ## Core ideas
 
 - Markflow adapts to your project. Your project does not adapt to Markflow.

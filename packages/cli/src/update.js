@@ -2,10 +2,11 @@
 // It never overwrites a file the user changed.
 // Use preview mode to see what would change without changing files.
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { hashText } from "./hash.js";
 import { AGENTS } from "./agents.js";
+import { findTemplatesDir } from "./templates.js";
 import { METHODOLOGY_VERSION, TEMPLATE_VERSION } from "./versions.js";
 
 async function listFiles(dir, base, out) {
@@ -32,7 +33,7 @@ export async function runUpdate(options) {
     return { ok: false };
   }
   const srcDir = dirname(fileURLToPath(import.meta.url));
-  const templatesDir = resolve(srcDir, "../../../templates/base");
+  const templatesDir = await findTemplatesDir();
   const pkg = JSON.parse(await readFile(join(srcDir, "../package.json"), "utf8"));
   const projectName = marker.project || target.split("/").pop();
   const agent = marker.agent && marker.agent in AGENTS ? marker.agent : "generic";

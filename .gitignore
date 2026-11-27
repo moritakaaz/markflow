@@ -1,6 +1,7 @@
 node_modules
 dist
 build
+packages/cli/templates
 .env
 .env.local
 coverage

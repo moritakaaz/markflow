@@ -8,7 +8,7 @@ Run tests with npm test from this folder. Tests use temp dirs only. They never t
 
 ## Usage
 
-Run one of these commands. A command you do not know is rejected and creates no files.
+Install it with npx @moritakaaz/markflow init. Then run one of these commands. A command you do not know is rejected and creates no files.
 
 - `markflow init` creates the docs layer in the current repo.
 - `markflow init --agent claude` also creates CLAUDE.md. Use `--agent codex` for Codex, which reads AGENTS.md. Use `--agent cursor` for .cursor/rules/markflow.mdc. Use `--agent copilot` for .github/copilot-instructions.md.

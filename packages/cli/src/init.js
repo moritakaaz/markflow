@@ -2,11 +2,12 @@
 // It is non-interactive by default.
 // It never overwrites an existing file.
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discover } from "./discover.js";
 import { hashText } from "./hash.js";
 import { AGENTS } from "./agents.js";
+import { findTemplatesDir } from "./templates.js";
 import { METHODOLOGY_VERSION, TEMPLATE_VERSION } from "./versions.js";
 
 async function copyDir(src, dest, projectName) {
@@ -44,7 +45,7 @@ export async function runInit(options) {
   const target = options.target || process.cwd();
   const context = await discover(target);
   const srcDir = dirname(fileURLToPath(import.meta.url));
-  const templatesDir = resolve(srcDir, "../../../templates/base");
+  const templatesDir = await findTemplatesDir();
   const markflowDest = join(target, "markflow");
   await mkdir(markflowDest, { recursive: true });
   async function exists(path) {
