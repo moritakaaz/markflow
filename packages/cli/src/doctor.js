@@ -204,25 +204,32 @@ export async function runDoctor(options) {
       }
     }
   }
+  const stillTemplate = [];
   try {
     const templatesDir = await findTemplatesDir();
-    const projectName =
-      (marker && marker.project) || basename(root);
-    const prdTemplate = (
-      await readFile(join(templatesDir, "markflow/docs/PRD.md"), "utf8")
-    )
-      .split("{{project_name}}")
-      .join(projectName);
-    const prdText = await readFile(
-      join(root, "markflow/docs/PRD.md"),
-      "utf8"
-    );
-    if (prdText === prdTemplate) {
-      console.log("Warning PRD is still the template markflow/docs/PRD.md");
-      warnings.push("markflow/docs/PRD.md");
+    const projectName = (marker && marker.project) || basename(root);
+    for (const [rel, label] of [
+      ["markflow/docs/PRD.md", "PRD"],
+      ["markflow/docs/ARCHITECTURE.md", "ARCHITECTURE"],
+      ["markflow/TASKS.md", "TASKS"],
+    ]) {
+      const templateText = (
+        await readFile(join(templatesDir, rel), "utf8")
+      )
+        .split("{{project_name}}")
+        .join(projectName);
+      const text = await readFile(join(root, rel), "utf8");
+      if (text === templateText) {
+        console.log("Warning " + label + " is still the template " + rel);
+        warnings.push(rel);
+        stillTemplate.push(rel);
+      }
     }
   } catch {
-    // Template or PRD is missing, so skip this check.
+    // Template or doc is missing, so skip this check.
+  }
+  if (stillTemplate.length > 0) {
+    console.log("Next. Fill " + stillTemplate[0] + ".");
   }
   let specTotal = 0;
   let specDraft = 0;

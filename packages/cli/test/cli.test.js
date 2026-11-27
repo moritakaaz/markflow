@@ -81,6 +81,49 @@ describe("discover", () => {
     assert.equal(result.workspace.detected, true);
   });
 
+  it("detects dependencies from package.json", async (t) => {
+    const dir = await tempDir(t);
+    await write(
+      dir,
+      "package.json",
+      JSON.stringify({
+        dependencies: { alpha: "^1.0.0", beta: "^2.0.0" },
+        devDependencies: { gamma: "^3.0.0" },
+      })
+    );
+    const result = await discover(dir);
+    assert.deepEqual(
+      result.dependencies.map((d) => d.name),
+      ["alpha", "beta", "gamma"]
+    );
+    assert.equal(result.dependencies[0].confidence, "detected");
+    assert.equal(result.dependencies[0].evidence, "package.json");
+  });
+
+  it("detects dependencies from requirements.txt", async (t) => {
+    const dir = await tempDir(t);
+    await write(dir, "requirements.txt", "alpha==1.0\nbeta>=2.0\n");
+    const result = await discover(dir);
+    assert.deepEqual(
+      result.dependencies.map((d) => d.name),
+      ["alpha", "beta"]
+    );
+  });
+
+  it("detects dependencies from go.mod", async (t) => {
+    const dir = await tempDir(t);
+    await write(
+      dir,
+      "go.mod",
+      "module example.com/demo\n\ngo 1.21\n\nrequire (\n\tgithub.com/example/alpha v1.0.0\n\tgithub.com/example/beta/v4 v4.0.0\n)\n"
+    );
+    const result = await discover(dir);
+    assert.deepEqual(
+      result.dependencies.map((d) => d.name),
+      ["alpha", "beta"]
+    );
+  });
+
   it("skips venv, target, and .next dirs", async (t) => {
     const dir = await tempDir(t);
     await write(dir, "package.json", "{}");
@@ -163,6 +206,35 @@ describe("init", () => {
     assert.ok(filled.includes("- Monorepo. No"));
   });
 
+  it("fillArchitecture leaves framework as TBD", () => {
+    const filled = fillArchitecture("- Language. TBD\n- Framework. TBD\n", {
+      stacks: [{ name: "JavaScript", evidence: "package.json", confidence: "high" }],
+      monorepo: false,
+    });
+    assert.ok(filled.includes("- Framework. TBD"));
+  });
+
+  it("writes detected dependencies into docs", async (t) => {
+    const dir = await tempDir(t);
+    await write(
+      dir,
+      "package.json",
+      JSON.stringify({ dependencies: { alpha: "^1.0.0" } })
+    );
+    await runInit({ target: dir });
+    const arch = await readFile(
+      join(dir, "markflow/docs/ARCHITECTURE.md"),
+      "utf8"
+    );
+    assert.ok(arch.includes("- Framework. TBD"));
+    const stack = await readFile(
+      join(dir, "markflow/docs/STACK.md"),
+      "utf8"
+    );
+    assert.ok(stack.includes("## Detected dependencies"));
+    assert.ok(stack.includes("- alpha from package.json, detected"));
+  });
+
   it("fillArchitecture throws when template lines are missing", () => {
     assert.throws(
       () =>
@@ -214,6 +286,13 @@ describe("init", () => {
     assert.equal(marker.minimal, false);
   });
 
+  it("created AGENTS.md points to onboarding", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    const text = await readFile(join(dir, "AGENTS.md"), "utf8");
+    assert.ok(text.includes("markflow/.agents/workflows/onboarding.md"));
+  });
+
   it("init suggests onboarding on first run only", async (t) => {
     const dir = await tempDir(t);
     const first = await runInit({ target: dir });
@@ -256,6 +335,62 @@ describe("doctor", () => {
     const result = await runDoctor({ target: dir });
     assert.equal(result.ok, true);
     assert.ok(result.warnings.some((w) => w.includes("99-new.md")));
+  });
+
+  it("spec listed by file name in index passes", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    const index = await readFile(
+      join(dir, "markflow/specs/index.md"),
+      "utf8"
+    );
+    assert.ok(index.includes("| ID | File | Title | Status |"));
+    assert.ok(index.includes("Write the file name in the File column."));
+    await write(
+      dir,
+      "markflow/specs/01-record-a-sale.md",
+      "# Record a sale\n\n## Goal\n\nRecord one sale.\n\n## Acceptance\n\n- The sale is saved.\n\n## Status\n\nDraft\n"
+    );
+    await write(
+      dir,
+      "markflow/specs/index.md",
+      index.replace(
+        "| 01 | TBD | TBD | Draft |",
+        "| 01 | 01-record-a-sale.md | Record a sale | Draft |"
+      )
+    );
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(
+      !result.warnings.some((w) => w.includes("01-record-a-sale.md"))
+    );
+  });
+
+  it("spec listed by title only still warns", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    const index = await readFile(
+      join(dir, "markflow/specs/index.md"),
+      "utf8"
+    );
+    await write(
+      dir,
+      "markflow/specs/01-record-a-sale.md",
+      "# Record a sale\n\n## Goal\n\nRecord one sale.\n\n## Acceptance\n\n- The sale is saved.\n\n## Status\n\nDraft\n"
+    );
+    await write(
+      dir,
+      "markflow/specs/index.md",
+      index.replace(
+        "| 01 | TBD | TBD | Draft |",
+        "| 01 | TBD | Record a sale | Draft |"
+      )
+    );
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(
+      result.warnings.some((w) => w.includes("01-record-a-sale.md"))
+    );
   });
 
   it("warns on empty acceptance in a spec", async (t) => {
@@ -356,6 +491,28 @@ describe("doctor", () => {
     const result = await runDoctor({ target: dir });
     assert.equal(result.ok, true);
     assert.equal(result.errors.length, 0);
+  });
+
+  it("warns when ARCHITECTURE and TASKS are still the template", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(result.warnings.includes("markflow/docs/ARCHITECTURE.md"));
+    assert.ok(result.warnings.includes("markflow/TASKS.md"));
+  });
+
+  it("no template warnings when all three are filled", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(dir, "markflow/docs/PRD.md", "Our own product.\n");
+    await write(dir, "markflow/docs/ARCHITECTURE.md", "Our own stack.\n");
+    await write(dir, "markflow/TASKS.md", "Our own tasks.\n");
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(!result.warnings.includes("markflow/docs/PRD.md"));
+    assert.ok(!result.warnings.includes("markflow/docs/ARCHITECTURE.md"));
+    assert.ok(!result.warnings.includes("markflow/TASKS.md"));
   });
 
   it("no PRD warning when PRD is filled", async (t) => {
