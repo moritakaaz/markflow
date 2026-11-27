@@ -12,6 +12,17 @@ It reads what is already in the repo. Then it creates a clear place for intent, 
 
 ## How it works
 
+```mermaid
+flowchart TD
+    A[Discover repo] --> B[Generate docs]
+    B --> C[Write spec]
+    C --> D[Implement code]
+    D --> E[Run tests]
+    E --> F{Check evidence}
+    F -->|Pass| G[Done]
+    F -->|Fail| C
+```
+
 First, Markflow looks at the repo. It checks manifest files and configs to learn what stack you use. It marks what it cannot tell as TBD. It does not guess your architecture.
 
 Next, it creates a `markflow` folder and an `AGENTS.md` file in your repo. The `markflow` folder holds your PRD, architecture notes, specs, and tasks. The `AGENTS.md` file tells an AI agent where to start and what to read.
