@@ -4,6 +4,7 @@ import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discover } from "./discover.js";
+import { hashText } from "./hash.js";
 
 const AGENTS = {
   generic: null,
@@ -68,10 +69,26 @@ export async function runInit(options) {
   const pkg = JSON.parse(
     await readFile(join(srcDir, "../package.json"), "utf8")
   );
+  const files = {};
+  async function collectHashes(dir) {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await collectHashes(full);
+        continue;
+      }
+      const rel = full.slice(markflowDest.length + 1);
+      files[rel] = hashText(await readFile(full, "utf8"));
+    }
+  }
+  await collectHashes(markflowDest);
   const marker = {
     cli: pkg.version,
     methodology: pkg.version,
     template: pkg.version,
+    project: context.projectName,
+    files,
   };
   await writeFile(
     join(markflowDest, ".markflow.json"),

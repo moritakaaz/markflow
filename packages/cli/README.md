@@ -10,4 +10,6 @@ Init also writes markflow/.markflow.json. That file holds the cli, methodology, 
 
 Doctor checks a repo for missing Markflow files. Run it with doctor. It reports missing files and placeholders that were not replaced. It exits with 1 when it finds issues.
 
+Update restores missing files and updates files the user did not change. Run it with update. It never overwrites a file the user changed. It reports skipped files instead. It updates the version marker after it runs.
+
 See docs/PROJECT_DISCOVERY.md for how discovery works.
