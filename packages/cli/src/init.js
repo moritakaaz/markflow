@@ -9,16 +9,46 @@ import { hashText } from "./hash.js";
 import { AGENTS } from "./agents.js";
 import { findTemplatesDir } from "./templates.js";
 import { METHODOLOGY_VERSION, TEMPLATE_VERSION } from "./versions.js";
+import { MINIMAL_FILES } from "./minimal.js";
 
-async function copyDir(src, dest, projectName) {
+// True when any minimal file lives under this dir.
+function underFilter(filter, dirRel) {
+  if (!filter) {
+    return true;
+  }
+  const prefix = "markflow/" + dirRel + "/";
+  for (const file of filter) {
+    if (file.startsWith(prefix)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function copyDir(src, dest, projectName, base, createdPaths, filter) {
   let created = 0;
   const entries = await readdir(src, { withFileTypes: true });
   for (const entry of entries) {
     const srcPath = join(src, entry.name);
     const destPath = join(dest, entry.name);
     if (entry.isDirectory()) {
+      const dirRel = destPath.slice(base.length + 1);
+      if (!underFilter(filter, dirRel)) {
+        continue;
+      }
       await mkdir(destPath, { recursive: true });
-      created += await copyDir(srcPath, destPath, projectName);
+      created += await copyDir(
+        srcPath,
+        destPath,
+        projectName,
+        base,
+        createdPaths,
+        filter
+      );
+      continue;
+    }
+    const rel = destPath.slice(base.length + 1);
+    if (filter && !filter.has("markflow/" + rel)) {
       continue;
     }
     try {
@@ -31,9 +61,35 @@ async function copyDir(src, dest, projectName) {
     const replaced = text.split("{{project_name}}").join(projectName);
     await mkdir(dirname(destPath), { recursive: true });
     await writeFile(destPath, replaced);
+    createdPaths.push(rel);
     created += 1;
   }
   return created;
+}
+
+// Fill the ARCHITECTURE.md template with discovery results.
+// Throws when the template lines are gone, so a template
+// change fails loudly instead of silently skipping the fill.
+export function fillArchitecture(text, context) {
+  if (
+    !text.includes("- Language. TBD") ||
+    !text.includes("- Framework. TBD")
+  ) {
+    throw new Error("ARCHITECTURE.md template changed, fill failed.");
+  }
+  const names = context.stacks.map((s) => s.name).join(", ");
+  const evidence = context.stacks
+    .map((s) => s.evidence + " (" + s.confidence + ")")
+    .join(", ");
+  return text
+    .replace("- Language. TBD", "- Language. " + names)
+    .replace(
+      "- Framework. TBD",
+      "- Framework. TBD\n- Evidence. " +
+        evidence +
+        "\n- Monorepo. " +
+        (context.monorepo ? "Yes" : "No")
+    );
 }
 
 export async function runInit(options) {
@@ -42,6 +98,7 @@ export async function runInit(options) {
     console.log("Unknown agent.");
     return { agent, copied: 0, ok: false };
   }
+  const minimal = options.minimal === true;
   const target = options.target || process.cwd();
   const context = await discover(target);
   const srcDir = dirname(fileURLToPath(import.meta.url));
@@ -60,30 +117,21 @@ export async function runInit(options) {
   const stackPath = join(markflowDest, "docs/STACK.md");
   const archExisted = await exists(archPath);
   const stackExisted = await exists(stackPath);
+  const createdPaths = [];
   const created = await copyDir(
     join(templatesDir, "markflow"),
     markflowDest,
-    context.projectName
+    context.projectName,
+    markflowDest,
+    createdPaths,
+    minimal ? new Set(MINIMAL_FILES) : null
   );
   if (context.stacks.length > 0) {
-    const names = context.stacks.map((s) => s.name).join(", ");
-    const evidence = context.stacks
-      .map((s) => s.evidence + " (" + s.confidence + ")")
-      .join(", ");
     if (!archExisted) {
       const arch = await readFile(archPath, "utf8");
-      const filled = arch
-        .replace("- Language. TBD", "- Language. " + names)
-        .replace(
-          "- Framework. TBD",
-          "- Framework. TBD\n- Evidence. " +
-            evidence +
-            "\n- Monorepo. " +
-            (context.monorepo ? "Yes" : "No")
-        );
-      await writeFile(archPath, filled);
+      await writeFile(archPath, fillArchitecture(arch, context));
     }
-    if (!stackExisted) {
+    if (!stackExisted && (await exists(stackPath))) {
       const stack = await readFile(stackPath, "utf8");
       const lines = context.stacks.map(
         (s) => "- " + s.name + " from " + s.evidence + ", confidence " + s.confidence
@@ -152,35 +200,29 @@ export async function runInit(options) {
     }
   }
   marker.agent = marker.agent || agent;
+  marker.minimal = minimal;
   marker.discovery = {
     mode: context.mode,
     stacks: context.stacks,
     manifests: context.manifests,
     monorepo: context.monorepo,
   };
-  async function collectHashes(dir) {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        await collectHashes(full);
-        continue;
-      }
-      if (entry.name === ".markflow.json") {
-        continue;
-      }
-      const rel = full.slice(markflowDest.length + 1);
-      if (!(rel in marker.files)) {
-        marker.files[rel] = hashText(await readFile(full, "utf8"));
-      }
-    }
+  // Record hashes only for files this run created.
+  // A file the user wrote before init stays untracked,
+  // so update never treats it as a template file.
+  for (const rel of createdPaths) {
+    marker.files[rel] = hashText(
+      await readFile(join(markflowDest, rel), "utf8")
+    );
   }
-  await collectHashes(markflowDest);
   await writeFile(markerPath, JSON.stringify(marker, null, 2) + "\n");
+  let nextStep;
   if (created > 0) {
     console.log("Created markflow folder.");
+    nextStep = "Open your AI tool and say: start onboarding.";
+    console.log("Next step. " + nextStep);
   } else {
     console.log("markflow folder already exists.");
   }
-  return { ...context, agent, copied: created };
+  return { ...context, agent, copied: created, nextStep, minimal };
 }
