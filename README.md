@@ -39,6 +39,30 @@ Run this in your repo. It needs Node 18 or newer. It does not install app depend
 npx @moritakaaz/markflow init
 ```
 
+## Usage
+
+Run these in your repo after install. See packages/cli/README.md for the full list.
+
+```sh
+npx @moritakaaz/markflow init
+npx @moritakaaz/markflow doctor
+npx @moritakaaz/markflow update
+npx @moritakaaz/markflow --help
+```
+
+Use `init --minimal` for a small starter set. Use `init --agent claude` to also create CLAUDE.md. The agent flag takes generic, claude, codex, cursor, or copilot. The default is generic.
+
+Run `update --preview` to see what would change before update runs.
+
+Run `--help` to see all commands and flags. Run `--version` to see the CLI version.
+
+## Quick start
+
+1. Run init in your repo.
+2. Open your AI tool and say: start onboarding.
+3. Write your first spec in `markflow/specs` and list it in `markflow/specs/index.md`.
+4. Run doctor to check the docs, then start coding from the approved spec.
+
 ## Without Node
 
 Markflow works without Node. The docs are plain Markdown. Copy the templates by hand. See docs/MANUAL_SETUP.md for the steps.
@@ -56,6 +80,9 @@ Read `docs/PRINCIPLES.md` for the full list.
 ## Repo layout
 
 - `docs` holds the methodology. Start with `PRINCIPLES.md`, then `PROJECT_DISCOVERY.md` and `ADAPTATION.md`. Read `docs/EXAMPLE.md` for a bad doc next to a good doc.
+- `packages/cli` holds the command line tool. It has the init, doctor, and update commands.
+- `templates/base` holds the files init copies into a repo. That includes AGENTS.md and the markflow folder.
+- `.github/workflows` holds the CI workflow. It runs the CLI tests on Node 18 and 22.
 - `README.md` is this file. It stays short.
 - `CONTRIBUTING.md` explains how to help.
 - `CHANGELOG.md` tracks notable changes.
