@@ -85,7 +85,8 @@ export function fillArchitecture(text, context) {
     .replace("- Language. TBD", "- Language. " + names)
     .replace(
       "- Framework. TBD",
-      "- Framework. TBD\n- Evidence. " +
+      "- Framework. TBD" +
+        "\n- Evidence. " +
         evidence +
         "\n- Monorepo. " +
         (context.monorepo ? "Yes" : "No")
@@ -136,8 +137,17 @@ export async function runInit(options) {
       const lines = context.stacks.map(
         (s) => "- " + s.name + " from " + s.evidence + ", confidence " + s.confidence
       );
-      const filled =
+      let filled =
         stack + "\n## Detected stacks\n\nDiscovery found these stacks.\n\n" + lines.join("\n") + "\n";
+      if (context.dependencies.length > 0) {
+        const depLines = context.dependencies.map(
+          (d) => "- " + d.name + " from " + d.evidence + ", detected"
+        );
+        filled +=
+          "\n## Detected dependencies\n\nDiscovery found these dependencies.\n\n" +
+          depLines.join("\n") +
+          "\n";
+      }
       await writeFile(stackPath, filled);
     }
   }
@@ -206,6 +216,7 @@ export async function runInit(options) {
     stacks: context.stacks,
     manifests: context.manifests,
     monorepo: context.monorepo,
+    dependencies: context.dependencies,
   };
   // Record hashes only for files this run created.
   // A file the user wrote before init stays untracked,
