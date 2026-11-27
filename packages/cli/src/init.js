@@ -43,7 +43,7 @@ export async function runInit(options) {
   const agent = options.agent || "generic";
   if (!(agent in AGENTS)) {
     console.log("Unknown agent.");
-    return { agent, copied: 0 };
+    return { agent, copied: 0, ok: false };
   }
   const target = process.cwd();
   const context = await discover(target);

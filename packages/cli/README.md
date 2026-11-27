@@ -2,6 +2,17 @@
 
 This folder holds the Markflow command line tool. Read it when you work on the init command.
 
+## Usage
+
+Run one of these commands. A command you do not know is rejected and creates no files.
+
+- `markflow init` creates the docs layer in the current repo.
+- `markflow init --agent claude` also creates CLAUDE.md. Use `--agent cursor` for .cursorrules.
+- `markflow doctor` checks the docs layer for missing files and leftover placeholders.
+- `markflow update` restores missing files and updates files the user did not change.
+- `markflow --help` shows the commands.
+- `markflow --version` shows the CLI version.
+
 Init reads a repo, then copies the base templates into it. It is non-interactive by default. It does not init a framework. It does not install app dependencies.
 
 Use --agent to pick the agent file. The default is generic and creates AGENTS.md only. Use --agent claude to also create CLAUDE.md. Use --agent cursor to also create .cursorrules.
