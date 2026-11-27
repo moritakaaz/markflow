@@ -40,6 +40,10 @@ const SKIP_DIRS = new Set([
   "markflow",
   ".markflow",
   "vendor",
+  ".venv",
+  "venv",
+  "target",
+  ".next",
 ]);
 
 function stackFromEntry(name) {
