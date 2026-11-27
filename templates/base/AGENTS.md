@@ -6,6 +6,8 @@ This file is the router for AI agents in this project. Read it first.
 
 All project context lives in the `markflow` folder. Do not create new Markdown files in the root.
 
+If the PRD is still the template, start with the onboarding workflow in `markflow/.agents/workflows/onboarding.md`. It interviews the user one question at a time and fills the first docs.
+
 Start with these files in order.
 
 1. Read `markflow/docs/PRD.md` to learn what this project is.
