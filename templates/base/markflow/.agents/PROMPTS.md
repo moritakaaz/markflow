@@ -1,8 +1,12 @@
 # PROMPTS.md
 
 Purpose. This file holds standard prompts for {{project_name}}.
-Read when. You need a prompt for review, refactor, or a new feature.
+Read when. You need a prompt for onboarding, review, refactor, or a new feature.
 Do not read when. You already have a prompt that works. Use it.
+
+## Onboarding
+
+Interview me one question at a time. Start with the problem and the users. Then write PRD.md and ARCHITECTURE.md from my answers and from the code. Mark what you do not know as TBD and list the open questions at the end.
 
 ## Code review
 
