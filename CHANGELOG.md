@@ -4,6 +4,15 @@ All notable changes to Markflow will be noted here. The format is simple. Newest
 
 ## Unreleased
 
+## 0.3.0 - 2026-11-27
+
+- Add CI workflow running CLI tests on Node 18 and 22
+- Link onboarding workflow in template AGENTS.md
+- Warn when PRD, ARCHITECTURE, and TASKS are still templates, with a Next line
+- Detect dependencies without framework names and list them in STACK.md
+- Add File column to specs/index.md so doctor can find specs by file name
+- Grow the CLI test suite to 58 tests
+
 ## 0.2.0 - 2026-11-27
 
 - Fix update overwriting files the user wrote before init
