@@ -16,7 +16,7 @@ Discovery looks for files that already exist in the repo. These files tell Markf
 - `requirements.txt` or `pyproject.toml` points to a Python project
 - `Cargo.toml` points to a Rust project
 - `pom.xml` or `build.gradle` points to a Java project
-- `pubspec.yaml` points to a Flutter project
+- `pubspec.yaml` points to a framework project
 
 It also reads configs that are already there. Examples are framework configs, test configs, and CI configs. It reads them to learn, not to change them.
 

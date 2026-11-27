@@ -4,7 +4,7 @@ This file holds the permanent rules for Markflow. Read it before you change the 
 
 ## Framework independence
 
-Markflow never inits, installs, or changes an app framework. It only adds docs and workflows to a repo that already exists. A Nuxt project stays a Nuxt project. A Laravel project stays a Laravel project. Markflow adapts to the project.
+Markflow never inits, installs, or changes an app framework. It only adds docs and workflows to a repo that already exists. A project keeps its own framework. Markflow adapts to the project.
 
 ## Language agnostic
 

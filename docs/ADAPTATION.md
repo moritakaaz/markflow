@@ -6,7 +6,7 @@ This file explains how one method works across many kinds of projects. Read it w
 
 Markflow does not change its core when the stack changes. The core stays the same. It is docs first, spec driven, and evidence based.
 
-What changes is context. A Nuxt project needs different context than a Laravel project. A Go project needs different context than a Flutter project. Adapters supply that context. The core does not hardcode it.
+What changes is context. Each framework needs different context. Adapters supply that context. The core does not hardcode it.
 
 ## Adapters
 
@@ -38,4 +38,4 @@ Do not force one stack on the whole monorepo. Let each area keep its own context
 
 ## What adaptation is not
 
-Adaptation is not scaffolding. Markflow does not create a Nuxt app or a Laravel app. The user or an AI agent creates the app from a spec when needed. Markflow only makes sure the spec and the docs are clear first.
+Adaptation is not scaffolding. Markflow does not create a framework app. The user or an AI agent creates the app from a spec when needed. Markflow only makes sure the spec and the docs are clear first.
