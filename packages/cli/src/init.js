@@ -5,6 +5,12 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discover } from "./discover.js";
 
+const AGENTS = {
+  generic: null,
+  claude: "CLAUDE.md",
+  cursor: ".cursorrules",
+};
+
 async function copyDir(src, dest, projectName) {
   const entries = await readdir(src, { withFileTypes: true });
   for (const entry of entries) {
@@ -22,33 +28,55 @@ async function copyDir(src, dest, projectName) {
   }
 }
 
-export async function runInit(args) {
+export async function runInit(options) {
+  const agent = options.agent || "generic";
+  if (!(agent in AGENTS)) {
+    console.log("Unknown agent.");
+    return { agent, copied: 0 };
+  }
   const target = process.cwd();
   const context = await discover(target);
-  const templatesDir = resolve(
-    dirname(fileURLToPath(import.meta.url)),
-    "../../../templates/base"
-  );
+  const srcDir = dirname(fileURLToPath(import.meta.url));
+  const templatesDir = resolve(srcDir, "../../../templates/base");
   const markflowDest = join(target, "markflow");
   try {
     await stat(markflowDest);
     console.log("markflow folder already exists.");
-    return { ...context, copied: 0 };
+    return { ...context, agent, copied: 0 };
   } catch {
     // Folder does not exist yet, so init can continue.
   }
   await copyDir(join(templatesDir, "markflow"), markflowDest, context.projectName);
   const agentsSrc = join(templatesDir, "AGENTS.md");
   const agentsDest = join(target, "AGENTS.md");
+  let agentsText = "";
   try {
     await stat(agentsDest);
     console.log("AGENTS.md already exists.");
+    agentsText = await readFile(agentsDest, "utf8");
   } catch {
     const text = await readFile(agentsSrc, "utf8");
-    const replaced = text.split("{{project_name}}").join(context.projectName);
-    await writeFile(agentsDest, replaced);
+    agentsText = text.split("{{project_name}}").join(context.projectName);
+    await writeFile(agentsDest, agentsText);
     console.log("Created AGENTS.md.");
   }
+  const agentFile = AGENTS[agent];
+  if (agentFile) {
+    await writeFile(join(target, agentFile), agentsText);
+    console.log("Created " + agentFile + ".");
+  }
+  const pkg = JSON.parse(
+    await readFile(join(srcDir, "../package.json"), "utf8")
+  );
+  const marker = {
+    cli: pkg.version,
+    methodology: pkg.version,
+    template: pkg.version,
+  };
+  await writeFile(
+    join(markflowDest, ".markflow.json"),
+    JSON.stringify(marker, null, 2) + "\n"
+  );
   console.log("Created markflow folder.");
-  return { ...context, copied: 1 };
+  return { ...context, agent, copied: 1 };
 }
