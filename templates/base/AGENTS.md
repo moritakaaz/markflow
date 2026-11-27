@@ -18,6 +18,7 @@ Start with these files in order.
 - Code is in English. Docs are in English for this template. Change the doc language in `markflow/docs/PRD.md` when the project needs another language.
 - All code lives in the source folder found during discovery. Tests live in the test folder found during discovery. Do not create new top level folders for code.
 - Specs in `markflow/specs` are the source for intent and requirements. If code differs from a spec, stop and check both. Do not assume the spec is always right.
+- Every claim in a doc comes from one of three places. What the user said. What the code shows. Or TBD. Never invent a decision or an architecture detail.
 - All links inside `markflow` must be relative to that folder. Do not use absolute paths from the root.
 
 ## If you are human and you do not use AI
