@@ -8,6 +8,7 @@ import { hashText } from "./hash.js";
 import { AGENTS } from "./agents.js";
 import { findTemplatesDir } from "./templates.js";
 import { METHODOLOGY_VERSION, TEMPLATE_VERSION } from "./versions.js";
+import { MINIMAL_FILES } from "./minimal.js";
 
 async function listFiles(dir, base, out) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -20,6 +21,10 @@ async function listFiles(dir, base, out) {
     out.push(full.slice(base.length + 1));
   }
 }
+
+// Files init fills from discovery. After init they belong to the user.
+// Update restores them when missing but never changes their content.
+const USER_OWNED = new Set(["docs/ARCHITECTURE.md", "docs/STACK.md"]);
 
 export async function runUpdate(options) {
   const preview = options && options.preview;
@@ -42,13 +47,17 @@ export async function runUpdate(options) {
   const rels = [];
   await listFiles(join(templatesDir, "markflow"), join(templatesDir, "markflow"), rels);
   const templateSet = new Set(rels);
+  const syncRels =
+    marker.minimal === true
+      ? rels.filter((rel) => MINIMAL_FILES.includes("markflow/" + rel))
+      : rels;
   let updated = 0;
   let restored = 0;
   let skipped = 0;
   let kept = 0;
   const files = { ...stored };
   const rootFiles = { ...storedRoot };
-  async function sync(rel, dest, templateText, storedMap, newMap) {
+  async function sync(rel, dest, templateText, storedMap, newMap, userOwned) {
     const templateHash = hashText(templateText);
     let current = null;
     try {
@@ -61,6 +70,11 @@ export async function runUpdate(options) {
       }
       restored += 1;
       newMap[rel] = templateHash;
+      return;
+    }
+    if (userOwned) {
+      console.log("Skipped " + rel + ", user owned.");
+      skipped += 1;
       return;
     }
     if (storedMap[rel] && hashText(current) === storedMap[rel]) {
@@ -77,11 +91,11 @@ export async function runUpdate(options) {
     console.log("Skipped " + rel + ", modified.");
     skipped += 1;
   }
-  for (const rel of rels) {
+  for (const rel of syncRels) {
     const templateText = (await readFile(join(templatesDir, "markflow", rel), "utf8"))
       .split("{{project_name}}")
       .join(projectName);
-    await sync(rel, join(target, "markflow", rel), templateText, stored, files);
+    await sync(rel, join(target, "markflow", rel), templateText, stored, files, USER_OWNED.has(rel));
   }
   for (const rel of Object.keys(stored)) {
     if (!templateSet.has(rel)) {
