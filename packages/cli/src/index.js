@@ -9,7 +9,7 @@ import { runUpdate } from "./update.js";
 
 const HELP = [
   "Usage",
-  "  markflow init [--agent generic|claude|codex|cursor|copilot]",
+  "  markflow init [--agent generic|claude|codex|cursor|copilot] [--minimal]",
   "  markflow doctor",
   "  markflow update [--preview]",
   "  markflow --help",
@@ -49,7 +49,10 @@ if (args.length === 0) {
   const result = await runUpdate({ preview: args.includes("--preview") });
   process.exitCode = result.ok ? 0 : 1;
 } else if (args[0] === "init") {
-  const result = await runInit({ agent: parseAgent(args.slice(1)) });
+  const result = await runInit({
+    agent: parseAgent(args.slice(1)),
+    minimal: args.includes("--minimal"),
+  });
   process.exitCode = result.ok === false ? 1 : 0;
 } else {
   console.log("Unknown command " + args[0] + ".");
