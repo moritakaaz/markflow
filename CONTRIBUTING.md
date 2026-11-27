@@ -36,6 +36,8 @@ Every doc file should start with a short note on what it is for and when to read
 
 Use kebab-case for file names. Keep file names in English.
 
+Write a comment only when logic is hard to follow without it. Use simple comments. For one line use //. For many lines use /* */. Do not use decorative comment lines.
+
 ## Pull requests
 
 Keep a pull request focused. One idea per pull request is best.

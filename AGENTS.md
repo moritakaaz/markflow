@@ -26,6 +26,8 @@ Every doc file should start with a short note on what it is for and when to read
 
 Use kebab-case for file names.
 
+Write a comment only when logic is hard to follow without it. Use simple comments. For one line use //. For many lines use /* */. Do not use decorative comment lines.
+
 ## How to work
 
 Pick one small task. Read the relevant doc first. Make the change. Test it when there is a test to run. Show evidence before you say it is done.
