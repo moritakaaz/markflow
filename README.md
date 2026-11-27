@@ -39,6 +39,10 @@ Run this in your repo. It needs Node 18 or newer. It does not install app depend
 npx @moritakaaz/markflow init
 ```
 
+## Without Node
+
+Markflow works without Node. The docs are plain Markdown. Copy the templates by hand. See docs/MANUAL_SETUP.md for the steps.
+
 ## Core ideas
 
 - Markflow adapts to your project. Your project does not adapt to Markflow.
