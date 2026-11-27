@@ -6,7 +6,7 @@ Do not read when. You only change local code. That does not need deploy notes.
 
 ## Release flow
 
-Write the steps from main branch to production. Keep each step to one line.
+<!-- Write the steps from main branch to production. Keep each step to one line. -->
 
 1. TBD
 2. TBD
@@ -14,10 +14,10 @@ Write the steps from main branch to production. Keep each step to one line.
 
 ## Env vars
 
-List the env vars that are required. Do not write real secrets here. Write example values only. Real values live in local env files.
+<!-- List the env vars that are required. Do not write real secrets here. Write example values only. Real values live in local env files. -->
 
 - TBD
 
 ## Rollback
 
-Write how to roll back a bad release. Keep it short.
+<!-- Write how to roll back a bad release. Keep it short. -->

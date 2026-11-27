@@ -6,7 +6,7 @@ Do not read when. You need one feature detail. Open its spec instead.
 
 ## Detected stack
 
-Write what discovery found. If discovery found nothing yet, write TBD.
+<!-- Write what discovery found. If discovery found nothing yet, write TBD. -->
 
 - Language. TBD
 - Framework. TBD
@@ -14,11 +14,11 @@ Write what discovery found. If discovery found nothing yet, write TBD.
 
 ## Layout
 
-Write where code lives. Write where tests live. Do not invent folders that do not exist yet. Mark planned folders as planned.
+<!-- Write where code lives. Write where tests live. Do not invent folders that do not exist yet. Mark planned folders as planned. -->
 
 ## Flow
 
-Write how a request or a job moves through the system. Use short steps. Keep it to five steps or less when you can.
+<!-- Write how a request or a job moves through the system. Use short steps. Keep it to five steps or less when you can. -->
 
 1. TBD
 2. TBD

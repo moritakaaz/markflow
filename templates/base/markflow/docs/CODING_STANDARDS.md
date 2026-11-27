@@ -11,7 +11,7 @@ Docs use English for this template. Change the doc language in PRD when the proj
 
 ## 2. Naming
 
-Write your naming pattern here. Decide the case for files, functions, and constants. Then follow it everywhere.
+<!-- Write your naming pattern here. Decide the case for files, functions, and constants. Then follow it everywhere. -->
 
 - Files. TBD
 - Functions. TBD
@@ -19,7 +19,9 @@ Write your naming pattern here. Decide the case for files, functions, and consta
 
 ## 3. Function format
 
-Write your function format here. Decide how long a function can be and how many tasks it should do. One function should do one task.
+<!-- Write your function format here. Decide how long a function can be and how many tasks it should do. -->
+
+One function should do one task.
 
 ## 4. Comments
 
@@ -27,7 +29,7 @@ Write a comment only when logic is hard to follow without it. Use simple comment
 
 ## 5. File structure
 
-Write the order of parts in a file here. Decide what comes first, imports or constants or the main function. Then follow it.
+<!-- Write the order of parts in a file here. Decide what comes first, imports or constants or the main function. Then follow it. -->
 
 ## 6. What to avoid
 

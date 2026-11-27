@@ -6,7 +6,7 @@ Do not read when. You only edit docs. Docs do not need tests.
 
 ## Levels
 
-Write what you test at each level. Keep it short.
+<!-- Write what you test at each level. Keep it short. -->
 
 - Unit. TBD
 - Integration. TBD
@@ -14,11 +14,11 @@ Write what you test at each level. Keep it short.
 
 ## How to run tests
 
-Write the exact command to run tests. Write what a pass looks like.
+<!-- Write the exact command to run tests. Write what a pass looks like. -->
 
 ## Edge cases
 
-List the edge cases that often break. Add new ones when you find them.
+<!-- List the edge cases that often break. Add new ones when you find them. -->
 
 - TBD
 

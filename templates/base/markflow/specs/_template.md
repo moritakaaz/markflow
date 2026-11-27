@@ -6,27 +6,27 @@ Do not read when. You implement a spec that already exists. Open that spec inste
 
 ## Goal
 
-Write what this feature must do in one or two sentences.
+<!-- Write what this feature must do in one or two sentences. -->
 
 ## Users
 
-Write who uses this feature.
+<!-- Write who uses this feature. -->
 
 ## Requirements
 
-List what must be true when this feature is done. Use plain words. Each item must be checkable.
+<!-- List what must be true when this feature is done. Use plain words. Each item must be checkable. -->
 
 - [ ] TBD
 
 ## Out of scope
 
-List what this feature will not do.
+<!-- List what this feature will not do. -->
 
 - TBD
 
 ## Acceptance
 
-Write how you will test this feature. List the main cases.
+<!-- Write how you will test this feature. List the main cases. -->
 
 ## Status
 

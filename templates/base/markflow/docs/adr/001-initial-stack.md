@@ -10,7 +10,7 @@ The initial stack is TBD. Discovery will fill this in during init.
 
 ## Context
 
-Write what discovery found. List the manifest files that proved the stack.
+<!-- Write what discovery found. List the manifest files that proved the stack. -->
 
 ## Options considered
 
@@ -18,7 +18,7 @@ Write what discovery found. List the manifest files that proved the stack.
 
 ## Outcome
 
-Write the picked stack and the main reason. Mark anything unsure as TBD.
+<!-- Write the picked stack and the main reason. Mark anything unsure as TBD. -->
 
 ## Status
 

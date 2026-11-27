@@ -6,11 +6,11 @@ Do not read when. You work on code that does not touch the API.
 
 ## Auth
 
-Write how auth works. If there is no auth yet, write TBD.
+<!-- Write how auth works. If there is no auth yet, write TBD. -->
 
 ## Endpoints
 
-List each endpoint with method, path, request, and response. Keep each entry short.
+<!-- List each endpoint with method, path, request, and response. Keep each entry short. -->
 
 ### TBD
 
@@ -21,4 +21,4 @@ List each endpoint with method, path, request, and response. Keep each entry sho
 
 ## Rules
 
-Write the shared rules. Examples are error format and pagination. Do not repeat one endpoint detail here.
+<!-- Write the shared rules. Examples are error format and pagination. Do not repeat one endpoint detail here. -->
