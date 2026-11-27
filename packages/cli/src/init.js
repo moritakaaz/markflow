@@ -6,12 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discover } from "./discover.js";
 import { hashText } from "./hash.js";
-
-const AGENTS = {
-  generic: null,
-  claude: "CLAUDE.md",
-  cursor: ".cursorrules",
-};
+import { AGENTS } from "./agents.js";
 
 async function copyDir(src, dest, projectName) {
   let created = 0;
@@ -109,16 +104,21 @@ export async function runInit(options) {
     await writeFile(agentsDest, agentsText);
     console.log("Created AGENTS.md.");
   }
-  const agentFile = AGENTS[agent];
-  if (agentFile) {
-    const agentDest = join(target, agentFile);
+  for (const file of AGENTS[agent]) {
+    const agentDest = join(target, file.path);
     try {
       await stat(agentDest);
-      console.log(agentFile + " already exists.");
+      console.log(file.path + " already exists.");
+      continue;
     } catch {
-      await writeFile(agentDest, agentsText);
-      console.log("Created " + agentFile + ".");
+      // File does not exist yet, so init can create it.
     }
+    const content = file.frontmatter
+      ? file.frontmatter + "\n" + agentsText
+      : agentsText;
+    await mkdir(dirname(agentDest), { recursive: true });
+    await writeFile(agentDest, content);
+    console.log("Created " + file.path + ".");
   }
   const pkg = JSON.parse(
     await readFile(join(srcDir, "../package.json"), "utf8")

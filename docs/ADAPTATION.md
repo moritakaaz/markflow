@@ -12,7 +12,7 @@ What changes is context. Each framework needs different context. Adapters supply
 
 There are two kinds of adapters.
 
-Agent adapters handle differences between AI agents. One agent reads `AGENTS.md`. Another reads `CLAUDE.md`. Another reads Cursor rules. The method is the same. The file format changes.
+Agent adapters handle differences between AI agents. One agent reads `AGENTS.md`. Another reads `CLAUDE.md`. Another reads Cursor rules. The method is the same. The file format changes. Current adapters are generic and Codex with `AGENTS.md`, Claude with `CLAUDE.md`, Cursor with `.cursor/rules/markflow.mdc`, and Copilot with `.github/copilot-instructions.md`. To add an agent, add one entry in `packages/cli/src/agents.js`. Do not change the init flow to fit one agent.
 
 Project context adapters handle differences between stacks. They know which manifest files to read and which docs matter most for that stack. They do not install or configure the stack. They only help Markflow understand it.
 

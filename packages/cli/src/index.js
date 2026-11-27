@@ -9,7 +9,7 @@ import { runUpdate } from "./update.js";
 
 const HELP = [
   "Usage",
-  "  markflow init [--agent generic|claude|cursor]",
+  "  markflow init [--agent generic|claude|codex|cursor|copilot]",
   "  markflow doctor",
   "  markflow update",
   "  markflow --help",

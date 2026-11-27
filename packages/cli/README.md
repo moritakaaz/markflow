@@ -7,7 +7,7 @@ This folder holds the Markflow command line tool. Read it when you work on the i
 Run one of these commands. A command you do not know is rejected and creates no files.
 
 - `markflow init` creates the docs layer in the current repo.
-- `markflow init --agent claude` also creates CLAUDE.md. Use `--agent cursor` for .cursorrules.
+- `markflow init --agent claude` also creates CLAUDE.md. Use `--agent codex` for Codex, which reads AGENTS.md. Use `--agent cursor` for .cursor/rules/markflow.mdc. Use `--agent copilot` for .github/copilot-instructions.md.
 - `markflow doctor` checks the docs layer for missing files, leftover placeholders, broken internal links, and specs missing from the index. It reports errors, warnings, and info. Only errors make it exit with 1.
 - `markflow update` restores missing files and updates files the user did not change.
 - `markflow --help` shows the commands.
