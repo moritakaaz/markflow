@@ -10,6 +10,8 @@ Draft means the spec is still being written. Approved means it is ready to build
 
 ## Specs
 
-| ID | Title | Status |
-|---|---|---|
-| 01 | TBD | Draft |
+Add one row per spec. Write the file name in the File column. Doctor checks the file name, not the title.
+
+| ID | File | Title | Status |
+|---|---|---|---|
+| 01 | TBD | TBD | Draft |
