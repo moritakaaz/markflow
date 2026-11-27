@@ -1,1 +1,17 @@
-{"bin":{"create-markflow":"./src/index.js","markflow":"./src/index.js"},"description":"Create a Markflow docs layer in a repo.","engines":{"node":">=18"},"license":"MIT","name":"create-markflow","scripts":{"test":"node --test"},"type":"module","version":"0.1.0"}
+{
+  "bin": {
+    "create-markflow": "./src/index.js",
+    "markflow": "./src/index.js"
+  },
+  "description": "Create a Markflow docs layer in a repo.",
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "name": "create-markflow",
+  "scripts": {
+    "test": "node --test"
+  },
+  "type": "module",
+  "version": "0.1.0"
+}
