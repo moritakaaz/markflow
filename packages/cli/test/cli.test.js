@@ -625,6 +625,19 @@ describe("doctor", () => {
     assert.ok(result.warnings.includes("markflow/docs/PRD.md"));
   });
 
+  it("warns when a language value is empty", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(
+      dir,
+      "markflow/docs/PRD.md",
+      "Our own product.\n\n## Language\n\n- Conversation language. Indonesian\n- Docs language. \n"
+    );
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(result.warnings.includes("markflow/docs/PRD.md"));
+  });
+
   it("no language warning when both languages are answered", async (t) => {
     const dir = await tempDir(t);
     await runInit({ target: dir });

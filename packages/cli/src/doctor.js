@@ -127,6 +127,19 @@ function sectionLines(text, heading) {
   return out;
 }
 
+// A language line is unanswered when it still says TBD or when the
+// value after the label is empty.
+function languageUnanswered(line) {
+  if (line.includes("TBD")) {
+    return true;
+  }
+  const dot = line.indexOf(".");
+  if (dot === -1) {
+    return false;
+  }
+  return line.slice(dot + 1).trim() === "";
+}
+
 // A spec counts as listed only when its exact file name appears.
 // A substring match would also match old-login.md for login.md.
 // A path form such as specs/login.md also counts.
@@ -273,10 +286,7 @@ export async function runDoctor(options) {
         "utf8"
       );
       const language = sectionLines(prdText, "Language");
-      if (
-        language !== null &&
-        language.some((line) => line.includes("TBD"))
-      ) {
+      if (language !== null && language.some(languageUnanswered)) {
         console.log("Warning Language not answered in markflow/docs/PRD.md");
         warnings.push("markflow/docs/PRD.md");
       }
