@@ -309,6 +309,24 @@ describe("init", () => {
     assert.ok(prd.includes("- Docs. TBD"));
   });
 
+  it("tasks list the first five steps and review names the user as approver", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    const tasks = await readFile(join(dir, "markflow/TASKS.md"), "utf8");
+    assert.ok(tasks.includes("Finish onboarding in markflow/.agents/workflows/onboarding.md"));
+    assert.ok(tasks.includes("Write spec 01 from markflow/specs/_template.md"));
+    assert.ok(tasks.includes("Review spec 01 with review-spec.md"));
+    assert.ok(tasks.includes("Build spec 01 with implement-spec.md"));
+    assert.ok(tasks.includes("Update TASKS.md when spec 01 is done"));
+    const review = await readFile(
+      join(dir, "markflow/.agents/workflows/review-spec.md"),
+      "utf8"
+    );
+    assert.ok(review.includes("Only the user marks a spec Approved"));
+    assert.ok(review.includes("change Draft to Approved in the spec and in specs/index.md"));
+    assert.ok(review.includes("Then coding starts with implement-spec"));
+  });
+
   it("init suggests onboarding on first run only", async (t) => {
     const dir = await tempDir(t);
     const first = await runInit({ target: dir });
