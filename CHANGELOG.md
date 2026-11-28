@@ -4,6 +4,14 @@ All notable changes to Markflow will be noted here. The format is simple. Newest
 
 ## Unreleased
 
+## 0.4.0 - 2026-11-28
+
+- Add usage section, quick start, and repo layout to README
+- Ask language in onboarding and record it in PRD
+- Fill TASKS with five steps and name the user as approver
+- Split TBD count into now and later in doctor
+- Grow the CLI test suite to 62 tests
+
 ## 0.3.0 - 2026-11-27
 
 - Add CI workflow running CLI tests on Node 18 and 22
