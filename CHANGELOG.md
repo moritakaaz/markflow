@@ -4,6 +4,16 @@ All notable changes to Markflow will be noted here. The format is simple. Newest
 
 ## Unreleased
 
+## 0.4.2 - 2026-11-28
+
+- Read Draft from the Status line only
+- Match spec index by exact file name
+- Ignore TBD in hidden comments
+- Keep untouched user owned files on update
+- Keep machine keywords in English in every doc
+- Add CI badge to README
+- Grow the CLI test suite to 67 tests
+
 ## 0.4.1 - 2026-11-28
 
 - Ask language first in onboarding, before the problem
