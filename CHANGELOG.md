@@ -4,6 +4,14 @@ All notable changes to Markflow will be noted here. The format is simple. Newest
 
 ## Unreleased
 
+## 0.4.3 - 2026-11-28
+
+- Warn on unknown status value
+- Match spec index by path and markdown link
+- Check language answers in PRD
+- Add house rules to template AGENTS.md
+- Grow the CLI test suite to 72 tests
+
 ## 0.4.2 - 2026-11-28
 
 - Read Draft from the Status line only
