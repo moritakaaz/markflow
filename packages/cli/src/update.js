@@ -73,8 +73,16 @@ export async function runUpdate(options) {
       return;
     }
     if (userOwned) {
-      console.log("Skipped " + rel + ", user owned.");
-      skipped += 1;
+      if (storedMap[rel] && hashText(current) === storedMap[rel]) {
+        console.log("Kept " + rel + ", user owned.");
+        kept += 1;
+      } else if (storedMap[rel]) {
+        console.log("Skipped " + rel + ", modified.");
+        skipped += 1;
+      } else {
+        console.log("Skipped " + rel + ", user owned.");
+        skipped += 1;
+      }
       return;
     }
     if (storedMap[rel] && hashText(current) === storedMap[rel]) {

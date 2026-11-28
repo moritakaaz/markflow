@@ -127,6 +127,12 @@ function sectionLines(text, heading) {
   return out;
 }
 
+// A spec counts as listed only when its exact file name appears.
+// A substring match would also match old-login.md for login.md.
+function indexLists(indexText, name) {
+  return indexText.split(/[\s|,()]+/).includes(name);
+}
+
 function findLinks(text) {
   const links = [];
   const re = /\[[^\]]*\]\(([^)\s]+)\)/g;
@@ -202,7 +208,7 @@ export async function runDoctor(options) {
         break;
       }
     }
-    const count = text.split("TBD").length - 1;
+    const count = visible.split("TBD").length - 1;
     if (isTbdNow(rel)) {
       tbdNow += count;
     } else {
@@ -273,10 +279,14 @@ export async function runDoctor(options) {
       specTotal += 1;
       const text = await readFile(file, "utf8");
       const rel = file.slice(root.length + 1);
-      if (text.includes("Status") && text.includes("Draft")) {
+      const status = sectionLines(text, "Status");
+      if (
+        status !== null &&
+        status.some((line) => line.trim() === "Draft")
+      ) {
         specDraft += 1;
       }
-      if (!indexText.includes(name)) {
+      if (!indexLists(indexText, name)) {
         console.log("Warning Spec not listed in index " + rel);
         warnings.push(rel);
       }
@@ -290,11 +300,10 @@ export async function runDoctor(options) {
           warnings.push(rel);
         }
       }
-      const status = sectionLines(text, "Status");
       if (
         status !== null &&
         status.some((line) => line.trim() === "Approved") &&
-        text.includes("TBD")
+        stripComments(text).includes("TBD")
       ) {
         console.log("Warning Approved spec still has TBD in " + rel);
         warnings.push(rel);

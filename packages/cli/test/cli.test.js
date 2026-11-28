@@ -404,6 +404,31 @@ describe("doctor", () => {
     );
   });
 
+  it("spec with a similar name in index still warns", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(
+      dir,
+      "markflow/specs/login.md",
+      "# Login\n\n## Goal\n\nLog in.\n\n## Acceptance\n\n- The user logs in.\n\n## Status\n\nDraft\n"
+    );
+    const index = await readFile(
+      join(dir, "markflow/specs/index.md"),
+      "utf8"
+    );
+    await write(
+      dir,
+      "markflow/specs/index.md",
+      index.replace(
+        "| 01 | TBD | TBD | Draft |",
+        "| 01 | old-login.md | Old login | Draft |"
+      )
+    );
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(result.warnings.some((w) => w.includes("login.md")));
+  });
+
   it("spec listed by title only still warns", async (t) => {
     const dir = await tempDir(t);
     await runInit({ target: dir });
@@ -471,6 +496,52 @@ describe("doctor", () => {
     );
   });
 
+  it("Indonesian spec with English keywords passes", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    const agents = await readFile(join(dir, "AGENTS.md"), "utf8");
+    assert.ok(agents.includes("Keep these words in English in every doc."));
+    await write(
+      dir,
+      "markflow/specs/01-masuk.md",
+      "# Masuk\n\n## Goal\n\nPengguna bisa masuk.\n\n## Acceptance\n\n- Pengguna masuk dengan kata sandi yang benar.\n- Pengguna gagal masuk dengan kata sandi yang salah.\n\n## Status\n\nApproved\n"
+    );
+    const index = await readFile(
+      join(dir, "markflow/specs/index.md"),
+      "utf8"
+    );
+    await write(
+      dir,
+      "markflow/specs/index.md",
+      index.replace(
+        "| 01 | TBD | TBD | Draft |",
+        "| 01 | 01-masuk.md | Masuk | Approved |"
+      )
+    );
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(!result.warnings.some((w) => w.includes("01-masuk.md")));
+    const counts = runCli(["doctor"], dir);
+    assert.match(counts.stdout, /1 specs, 0 draft\./);
+  });
+
+  it("approved spec with Draft in a note is not a draft", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(
+      dir,
+      "markflow/specs/01-test.md",
+      "# Test spec\n\n## Goal\n\nDo a thing.\n\n## Acceptance\n\n- The thing works.\n\n## Status\n\nApproved\n\nNote. Draft copy was reviewed by the team.\n"
+    );
+    const index = await readFile(
+      join(dir, "markflow/specs/index.md"),
+      "utf8"
+    );
+    await write(dir, "markflow/specs/index.md", index + "\n01-test.md\n");
+    const result = runCli(["doctor"], dir);
+    assert.match(result.stdout, /1 specs, 0 draft\./);
+  });
+
   it("warns when PRD is still the template", async (t) => {
     const dir = await tempDir(t);
     await runInit({ target: dir });
@@ -483,9 +554,18 @@ describe("doctor", () => {
     const dir = await tempDir(t);
     await runInit({ target: dir });
     const result = runCli(["doctor"], dir);
-    assert.match(result.stdout, /20 TBD left to decide now\./);
-    assert.match(result.stdout, /39 TBD left for later\./);
+    assert.match(result.stdout, /19 TBD left to decide now\./);
+    assert.match(result.stdout, /37 TBD left for later\./);
     assert.ok(!result.stdout.includes("TBD left in docs"));
+  });
+
+  it("hidden TBD in a comment is not counted", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    const prd = await readFile(join(dir, "markflow/docs/PRD.md"), "utf8");
+    await write(dir, "markflow/docs/PRD.md", prd + "\n<!-- TBD -->\n");
+    const result = runCli(["doctor"], dir);
+    assert.match(result.stdout, /19 TBD left to decide now\./);
   });
 
   it("moves a real spec TBD into the now count", async (t) => {
@@ -497,8 +577,8 @@ describe("doctor", () => {
       "# 01 Test\n\n## Status\n\nDraft\n\nTBD\n"
     );
     const result = runCli(["doctor"], dir);
-    assert.match(result.stdout, /21 TBD left to decide now\./);
-    assert.match(result.stdout, /39 TBD left for later\./);
+    assert.match(result.stdout, /20 TBD left to decide now\./);
+    assert.match(result.stdout, /37 TBD left for later\./);
   });
 
   it("warns when instruction text is left visible", async (t) => {
@@ -619,7 +699,8 @@ describe("update", () => {
     const result = await runUpdate({ target: dir });
     assert.equal(result.ok, true);
     assert.equal(result.updated, 0);
-    assert.equal(result.skipped, 3);
+    assert.equal(result.skipped, 1);
+    assert.equal(result.kept, 2);
     const after = await readFile(join(dir, "markflow/docs/PRD.md"), "utf8");
     assert.equal(after, "MY OWN PRD TEXT\n");
   });
@@ -641,7 +722,8 @@ describe("update", () => {
     const result = await runUpdate({ target: dir });
     assert.equal(result.ok, true);
     assert.equal(result.updated, 0);
-    assert.equal(result.skipped, 2);
+    assert.equal(result.skipped, 0);
+    assert.equal(result.kept, 2);
     const archAfter = await readFile(
       join(dir, "markflow/docs/ARCHITECTURE.md"),
       "utf8"
@@ -652,6 +734,19 @@ describe("update", () => {
       "utf8"
     );
     assert.ok(stackAfter.includes("Detected stacks"));
+  });
+
+  it("untouched user owned file is kept, not skipped", async (t) => {
+    const dir = await tempDir(t);
+    await write(dir, "package.json", "{}");
+    await runInit({ target: dir, minimal: true });
+    const result = runCli(["update", "--preview"], dir);
+    assert.ok(
+      result.stdout.includes("Kept docs/ARCHITECTURE.md, user owned.")
+    );
+    assert.ok(
+      !result.stdout.includes("Skipped docs/ARCHITECTURE.md")
+    );
   });
 
   it("restores ARCHITECTURE.md when missing", async (t) => {
@@ -677,7 +772,8 @@ describe("update", () => {
     const result = await runUpdate({ target: dir });
     assert.equal(result.ok, true);
     assert.equal(result.restored, 1);
-    assert.equal(result.skipped, 3);
+    assert.equal(result.skipped, 1);
+    assert.equal(result.kept, 2);
     const tasks = await readFile(join(dir, "markflow/TASKS.md"), "utf8");
     assert.equal(tasks, "my own notes\n");
   });
@@ -709,7 +805,7 @@ describe("update", () => {
     marker.files["docs/OLD.md"] = "abc123";
     await writeFile(markerPath, JSON.stringify(marker, null, 2));
     const result = await runUpdate({ target: dir });
-    assert.equal(result.kept, 1);
+    assert.equal(result.kept, 3);
   });
 
   it("no marker fails", async (t) => {

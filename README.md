@@ -1,5 +1,7 @@
 # Markflow
 
+[![Test](https://github.com/moritakaaz/markflow/actions/workflows/test.yml/badge.svg)](https://github.com/moritakaaz/markflow/actions/workflows/test.yml)
+
 A universal documentation-driven development system for humans and AI agents.
 
 Markflow helps teams keep project intent in Markdown. It gives humans and AI agents the same source to work from. It does not build your app. It builds the docs, specs, and workflows around your app so work stays consistent.

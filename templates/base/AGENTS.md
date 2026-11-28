@@ -17,7 +17,8 @@ Start with these files in order.
 
 ## Rules you must not break
 
-- Code is in English. Docs are in English for this template. Change the doc language in `markflow/docs/PRD.md` when the project needs another language.
+- Code is in English. Docs are in English for this template. Change the doc language in `markflow/docs/PRD.md` when the project needs another language. The Markflow repo itself is English only. Your project is not.
+- Keep these words in English in every doc. Status, Acceptance, Approved, Draft, and TBD. Doctor reads them. Write the rest in any language.
 - All code lives in the source folder found during discovery. Tests live in the test folder found during discovery. Do not create new top level folders for code.
 - Specs in `markflow/specs` are the source for intent and requirements. If code differs from a spec, stop and check both. Do not assume the spec is always right.
 - Every claim in a doc comes from one of three places. What the user said. What the code shows. Or TBD. Never invent a decision or an architecture detail.
