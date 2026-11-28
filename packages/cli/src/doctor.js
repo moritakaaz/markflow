@@ -22,6 +22,25 @@ const REQUIRED = [
 
 const AGENT_FILES = ["CLAUDE.md", ".cursor/rules/markflow.mdc"];
 
+// TBD in these files blocks the start. TBD in other docs can wait.
+const TBD_NOW = [
+  "markflow/docs/PRD.md",
+  "markflow/docs/ARCHITECTURE.md",
+  "markflow/docs/STACK.md",
+  "markflow/TASKS.md",
+];
+
+function isTbdNow(rel) {
+  if (TBD_NOW.includes(rel)) {
+    return true;
+  }
+  return (
+    rel.startsWith("markflow/specs/") &&
+    !rel.endsWith("/index.md") &&
+    !rel.endsWith("/_template.md")
+  );
+}
+
 async function walk(dir, out) {
   let entries;
   try {
@@ -161,7 +180,8 @@ export async function runDoctor(options) {
   for (const file of AGENT_FILES) {
     mdFiles.push(join(root, file));
   }
-  let tbd = 0;
+  let tbdNow = 0;
+  let tbdLater = 0;
   for (const file of mdFiles) {
     let text;
     try {
@@ -182,7 +202,12 @@ export async function runDoctor(options) {
         break;
       }
     }
-    tbd += text.split("TBD").length - 1;
+    const count = text.split("TBD").length - 1;
+    if (isTbdNow(rel)) {
+      tbdNow += count;
+    } else {
+      tbdLater += count;
+    }
     for (const link of findLinks(text)) {
       if (
         link.startsWith("http") ||
@@ -278,7 +303,8 @@ export async function runDoctor(options) {
   } catch {
     // Missing specs folder is already reported above.
   }
-  console.log("Info " + tbd + " TBD left in docs.");
+  console.log("Info " + tbdNow + " TBD left to decide now.");
+  console.log("Info " + tbdLater + " TBD left for later.");
   console.log("Info " + specTotal + " specs, " + specDraft + " draft.");
   if (errors.length === 0 && warnings.length === 0) {
     console.log("Doctor found no issues.");

@@ -475,6 +475,28 @@ describe("doctor", () => {
     assert.ok(result.warnings.includes("markflow/docs/PRD.md"));
   });
 
+  it("splits the TBD count into now and later", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    const result = runCli(["doctor"], dir);
+    assert.match(result.stdout, /20 TBD left to decide now\./);
+    assert.match(result.stdout, /39 TBD left for later\./);
+    assert.ok(!result.stdout.includes("TBD left in docs"));
+  });
+
+  it("moves a real spec TBD into the now count", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(
+      dir,
+      "markflow/specs/01-test.md",
+      "# 01 Test\n\n## Status\n\nDraft\n\nTBD\n"
+    );
+    const result = runCli(["doctor"], dir);
+    assert.match(result.stdout, /21 TBD left to decide now\./);
+    assert.match(result.stdout, /39 TBD left for later\./);
+  });
+
   it("warns when instruction text is left visible", async (t) => {
     const dir = await tempDir(t);
     await runInit({ target: dir });
