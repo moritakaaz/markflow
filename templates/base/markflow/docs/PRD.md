@@ -8,6 +8,13 @@ Do not read when. You need code detail. Open a spec in `specs` instead.
 
 <!-- Write one short paragraph. What problem does this project solve. Who has that problem today. -->
 
+## Language
+
+<!-- Write which language to use in this conversation and which language to use for docs and code comments. Code names stay in English. -->
+
+- Conversation. TBD
+- Docs. TBD
+
 ## Users
 
 <!-- List the main users. Write one line per user type. Say what each type needs most. -->

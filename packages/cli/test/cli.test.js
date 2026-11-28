@@ -293,6 +293,22 @@ describe("init", () => {
     assert.ok(text.includes("markflow/.agents/workflows/onboarding.md"));
   });
 
+  it("onboarding asks the two language questions", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    const workflow = await readFile(
+      join(dir, "markflow/.agents/workflows/onboarding.md"),
+      "utf8"
+    );
+    assert.ok(workflow.includes("which language to use in this conversation"));
+    assert.ok(workflow.includes("which language to use for docs and code comments"));
+    assert.ok(workflow.includes("Code names stay in English"));
+    const prd = await readFile(join(dir, "markflow/docs/PRD.md"), "utf8");
+    assert.ok(prd.includes("## Language"));
+    assert.ok(prd.includes("- Conversation. TBD"));
+    assert.ok(prd.includes("- Docs. TBD"));
+  });
+
   it("init suggests onboarding on first run only", async (t) => {
     const dir = await tempDir(t);
     const first = await runInit({ target: dir });
