@@ -309,8 +309,8 @@ describe("init", () => {
     );
     const prd = await readFile(join(dir, "markflow/docs/PRD.md"), "utf8");
     assert.ok(prd.includes("## Language"));
-    assert.ok(prd.includes("- Conversation. TBD"));
-    assert.ok(prd.includes("- Docs. TBD"));
+    assert.ok(prd.includes("- Conversation language. TBD"));
+    assert.ok(prd.includes("- Docs language. TBD"));
   });
 
   it("tasks list the first five steps and review names the user as approver", async (t) => {
@@ -429,6 +429,56 @@ describe("doctor", () => {
     assert.ok(result.warnings.some((w) => w.includes("login.md")));
   });
 
+  it("spec listed as a path passes", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(
+      dir,
+      "markflow/specs/login.md",
+      "# Login\n\n## Goal\n\nLog in.\n\n## Acceptance\n\n- The user logs in.\n\n## Status\n\nDraft\n"
+    );
+    const index = await readFile(
+      join(dir, "markflow/specs/index.md"),
+      "utf8"
+    );
+    await write(
+      dir,
+      "markflow/specs/index.md",
+      index.replace(
+        "| 01 | TBD | TBD | Draft |",
+        "| 01 | specs/login.md | Login | Draft |"
+      )
+    );
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(!result.warnings.some((w) => w.includes("login.md")));
+  });
+
+  it("spec listed as a markdown link passes", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(
+      dir,
+      "markflow/specs/login.md",
+      "# Login\n\n## Goal\n\nLog in.\n\n## Acceptance\n\n- The user logs in.\n\n## Status\n\nDraft\n"
+    );
+    const index = await readFile(
+      join(dir, "markflow/specs/index.md"),
+      "utf8"
+    );
+    await write(
+      dir,
+      "markflow/specs/index.md",
+      index.replace(
+        "| 01 | TBD | TBD | Draft |",
+        "| 01 | [Login](login.md) | Login | Draft |"
+      )
+    );
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(!result.warnings.some((w) => w.includes("login.md")));
+  });
+
   it("spec listed by title only still warns", async (t) => {
     const dir = await tempDir(t);
     await runInit({ target: dir });
@@ -525,6 +575,26 @@ describe("doctor", () => {
     assert.match(counts.stdout, /1 specs, 0 draft\./);
   });
 
+  it("warns on unknown status value", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(
+      dir,
+      "markflow/specs/01-test.md",
+      "# Test spec\n\n## Goal\n\nDo a thing.\n\n## Acceptance\n\n- The thing works.\n\n## Status\n\nDisetujui\n"
+    );
+    const index = await readFile(
+      join(dir, "markflow/specs/index.md"),
+      "utf8"
+    );
+    await write(dir, "markflow/specs/index.md", index + "\n01-test.md\n");
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(result.warnings.some((w) => w.includes("01-test.md")));
+    const counts = runCli(["doctor"], dir);
+    assert.match(counts.stdout, /1 specs, 0 draft\./);
+  });
+
   it("approved spec with Draft in a note is not a draft", async (t) => {
     const dir = await tempDir(t);
     await runInit({ target: dir });
@@ -540,6 +610,32 @@ describe("doctor", () => {
     await write(dir, "markflow/specs/index.md", index + "\n01-test.md\n");
     const result = runCli(["doctor"], dir);
     assert.match(result.stdout, /1 specs, 0 draft\./);
+  });
+
+  it("warns when language is not answered in PRD", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(
+      dir,
+      "markflow/docs/PRD.md",
+      "Our own product.\n\n## Language\n\n- Conversation language. Indonesian\n- Docs language. TBD\n"
+    );
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(result.warnings.includes("markflow/docs/PRD.md"));
+  });
+
+  it("no language warning when both languages are answered", async (t) => {
+    const dir = await tempDir(t);
+    await runInit({ target: dir });
+    await write(
+      dir,
+      "markflow/docs/PRD.md",
+      "Our own product.\n\n## Language\n\n- Conversation language. Indonesian\n- Docs language. Indonesian\n"
+    );
+    const result = await runDoctor({ target: dir });
+    assert.equal(result.ok, true);
+    assert.ok(!result.warnings.includes("markflow/docs/PRD.md"));
   });
 
   it("warns when PRD is still the template", async (t) => {

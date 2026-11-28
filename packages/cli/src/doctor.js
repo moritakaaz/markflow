@@ -129,8 +129,12 @@ function sectionLines(text, heading) {
 
 // A spec counts as listed only when its exact file name appears.
 // A substring match would also match old-login.md for login.md.
+// A path form such as specs/login.md also counts.
 function indexLists(indexText, name) {
-  return indexText.split(/[\s|,()]+/).includes(name);
+  if (indexText.split(/[\s|,()]+/).includes(name)) {
+    return true;
+  }
+  return indexText.includes("/" + name);
 }
 
 function findLinks(text) {
@@ -262,6 +266,24 @@ export async function runDoctor(options) {
   if (stillTemplate.length > 0) {
     console.log("Next. Fill " + stillTemplate[0] + ".");
   }
+  if (!stillTemplate.includes("markflow/docs/PRD.md")) {
+    try {
+      const prdText = await readFile(
+        join(root, "markflow/docs/PRD.md"),
+        "utf8"
+      );
+      const language = sectionLines(prdText, "Language");
+      if (
+        language !== null &&
+        language.some((line) => line.includes("TBD"))
+      ) {
+        console.log("Warning Language not answered in markflow/docs/PRD.md");
+        warnings.push("markflow/docs/PRD.md");
+      }
+    } catch {
+      // Missing PRD is already reported above.
+    }
+  }
   let specTotal = 0;
   let specDraft = 0;
   try {
@@ -307,6 +329,20 @@ export async function runDoctor(options) {
       ) {
         console.log("Warning Approved spec still has TBD in " + rel);
         warnings.push(rel);
+      }
+      if (status !== null) {
+        const statusLines = stripComments(status.join("\n"))
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line !== "");
+        if (
+          statusLines.length > 0 &&
+          !statusLines.includes("Draft") &&
+          !statusLines.includes("Approved")
+        ) {
+          console.log("Warning Unknown status in " + rel);
+          warnings.push(rel);
+        }
       }
     }
   } catch {
