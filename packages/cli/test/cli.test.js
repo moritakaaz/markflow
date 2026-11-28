@@ -303,6 +303,10 @@ describe("init", () => {
     assert.ok(workflow.includes("which language to use in this conversation"));
     assert.ok(workflow.includes("which language to use for docs and code comments"));
     assert.ok(workflow.includes("Code names stay in English"));
+    assert.ok(
+      workflow.indexOf("which language to use in this conversation") <
+        workflow.indexOf("Start with the problem")
+    );
     const prd = await readFile(join(dir, "markflow/docs/PRD.md"), "utf8");
     assert.ok(prd.includes("## Language"));
     assert.ok(prd.includes("- Conversation. TBD"));
