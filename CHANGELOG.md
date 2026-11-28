@@ -4,6 +4,10 @@ All notable changes to Markflow will be noted here. The format is simple. Newest
 
 ## Unreleased
 
+## 0.4.1 - 2026-11-28
+
+- Ask language first in onboarding, before the problem
+
 ## 0.4.0 - 2026-11-28
 
 - Add usage section, quick start, and repo layout to README

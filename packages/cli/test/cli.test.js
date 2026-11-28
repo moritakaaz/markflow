@@ -769,7 +769,7 @@ describe("parser", () => {
     const dir = await tempDir(t);
     const result = runCli(["--version"], dir);
     assert.equal(result.status, 0);
-    assert.equal(result.stdout.trim(), "0.4.0");
+    assert.equal(result.stdout.trim(), "0.4.1");
   });
 });
 
